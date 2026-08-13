@@ -1,6 +1,7 @@
-// Placeholder until the real file is generated from the local Supabase
-// database. Once `supabase start` is running:
-//   npx supabase gen types typescript --local > src/types/database.types.ts
-// This keeps imports of `Database` working (as `any`-shaped) before that.
+// Placeholder until the real file is generated from the Supabase database.
+// `supabase gen types typescript --db-url ...` needs Docker/Podman for
+// introspection, which we're not using -- instead run, once logged in via a
+// personal access token:
+//   npx supabase gen types typescript --project-id xgaxgguopeooptvsjcxn > src/types/database.types.ts
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Database = any;
