@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { updateUserOverrides, type ActionState } from "@/actions/users";
 import { MODULES, ACTIONS } from "@/lib/auth/types";
+import { Button } from "@/components/ui/Button";
 
 const initialState: ActionState = { error: null };
 
@@ -24,13 +25,13 @@ export function OverrideGrid({
   return (
     <form action={formAction} className="space-y-4">
       <input type="hidden" name="userId" value={userId} />
-      <div className="overflow-x-auto rounded-lg border border-black/10 dark:border-white/10">
+      <div className="overflow-x-auto rounded-2xl border border-outline-variant/60">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-50 dark:bg-zinc-950">
+          <thead className="bg-surface-container-high">
             <tr>
-              <th className="px-3 py-2 text-left font-medium text-zinc-500">Module</th>
+              <th className="px-3 py-2 text-left font-medium text-on-surface-variant">Module</th>
               {ACTIONS.map((action) => (
-                <th key={action} className="px-3 py-2 text-left font-medium text-zinc-500 capitalize">
+                <th key={action} className="px-3 py-2 text-left font-medium text-on-surface-variant capitalize">
                   {action}
                 </th>
               ))}
@@ -38,8 +39,8 @@ export function OverrideGrid({
           </thead>
           <tbody>
             {MODULES.map((module) => (
-              <tr key={module} className="border-t border-black/10 dark:border-white/10">
-                <td className="px-3 py-2 font-medium capitalize text-foreground">
+              <tr key={module} className="border-t border-outline-variant/60 bg-surface-container-lowest">
+                <td className="px-3 py-2 font-medium capitalize text-on-surface">
                   {module.replace("_", " ")}
                 </td>
                 {ACTIONS.map((action) => {
@@ -57,7 +58,7 @@ export function OverrideGrid({
                       <select
                         name={`override__${module}__${action}`}
                         defaultValue={defaultSelectValue}
-                        className="rounded border border-black/15 bg-transparent px-1.5 py-1 text-xs outline-none focus:border-foreground dark:border-white/20"
+                        className="rounded-md border border-outline bg-surface px-1.5 py-1 text-xs text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                       >
                         <option value="inherit">
                           Default ({roleDefault ? "yes" : "no"})
@@ -74,15 +75,11 @@ export function OverrideGrid({
         </table>
       </div>
 
-      {state.error && <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>}
+      {state.error && <p className="text-sm text-error">{state.error}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Saving…" : "Save overrides"}
-      </button>
+      </Button>
     </form>
   );
 }

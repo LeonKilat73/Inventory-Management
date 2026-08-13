@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
 import { deleteBundle } from "@/actions/items";
 import { BundleForm } from "./_components/BundleForm";
+import { Card } from "@/components/ui/Card";
 
 type BundleRow = {
   id: string;
@@ -36,8 +37,8 @@ export default async function BundlesPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Bundles</h1>
-        <p className="text-sm text-zinc-500">
+        <h1 className="text-2xl font-medium text-on-surface">Bundles</h1>
+        <p className="text-sm text-on-surface-variant">
           Packages of multiple items sold together at one price. Stock is
           tracked on the constituent items, not the bundle itself.
         </p>
@@ -45,24 +46,21 @@ export default async function BundlesPage() {
 
       <div className="space-y-4">
         {bundles?.map((bundle) => (
-          <div
-            key={bundle.id}
-            className="rounded-lg border border-black/10 p-4 dark:border-white/10"
-          >
+          <Card key={bundle.id}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-medium text-foreground">{bundle.name}</p>
-                <p className="font-mono text-xs text-zinc-500">{bundle.sku}</p>
+                <p className="font-medium text-on-surface">{bundle.name}</p>
+                <p className="font-mono text-xs text-on-surface-variant">{bundle.sku}</p>
               </div>
-              <div className="flex items-center gap-3">
-                <p className="font-medium text-foreground">
+              <div className="flex items-center gap-4">
+                <p className="font-medium text-on-surface">
                   ${bundle.bundles?.bundle_price ?? bundle.unit_price}
                 </p>
                 {canDelete && (
                   <form action={deleteBundle.bind(null, bundle.id)}>
                     <button
                       type="submit"
-                      className="text-sm text-red-600 underline underline-offset-2 dark:text-red-400"
+                      className="text-sm text-error underline underline-offset-2"
                     >
                       Delete
                     </button>
@@ -70,27 +68,25 @@ export default async function BundlesPage() {
                 )}
               </div>
             </div>
-            <ul className="mt-3 space-y-1 text-sm text-zinc-500">
+            <ul className="mt-3 space-y-1 text-sm text-on-surface-variant">
               {bundle.bundles?.bundle_items.map((bi, i) => (
                 <li key={i}>
                   {bi.quantity} × {bi.items.name} ({bi.items.sku})
                 </li>
               ))}
             </ul>
-          </div>
+          </Card>
         ))}
         {!bundles?.length && (
-          <p className="text-sm text-zinc-500">No bundles yet.</p>
+          <p className="text-sm text-on-surface-variant">No bundles yet.</p>
         )}
       </div>
 
       {canCreate && (
-        <div className="max-w-xl rounded-lg border border-black/10 p-6 dark:border-white/10">
-          <h2 className="mb-4 text-lg font-semibold text-foreground">
-            New bundle
-          </h2>
+        <Card className="max-w-xl">
+          <h2 className="mb-4 text-lg font-medium text-on-surface">New bundle</h2>
           <BundleForm items={plainItems ?? []} />
-        </div>
+        </Card>
       )}
     </div>
   );

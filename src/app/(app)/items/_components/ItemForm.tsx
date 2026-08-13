@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import type { ActionState } from "@/actions/items";
+import { Button } from "@/components/ui/Button";
+import { TextField, TextAreaField, SelectField } from "@/components/ui/Field";
 
 type Category = { id: string; name: string };
 
@@ -41,29 +43,25 @@ export function ItemForm({
         <TextField label="Name" name="name" defaultValue={defaults?.name} required />
       </div>
 
-      <TextField
+      <TextAreaField
         label="Description"
         name="description"
         defaultValue={defaults?.description ?? ""}
-        textarea
       />
 
       <div className="grid grid-cols-2 gap-4">
-        <label className="block text-sm">
-          <span className="mb-1 block font-medium text-foreground">Category</span>
-          <select
-            name="categoryId"
-            defaultValue={defaults?.category_id ?? ""}
-            className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground dark:border-white/20"
-          >
-            <option value="">None</option>
-            {categories.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SelectField
+          label="Category"
+          name="categoryId"
+          defaultValue={defaults?.category_id ?? ""}
+        >
+          <option value="">None</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </SelectField>
         <TextField
           label="Unit price"
           name="unitPrice"
@@ -95,61 +93,11 @@ export function ItemForm({
         />
       </div>
 
-      {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
-      )}
+      {state.error && <p className="text-sm text-error">{state.error}</p>}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-60"
-      >
+      <Button type="submit" disabled={pending}>
         {pending ? "Saving…" : submitLabel}
-      </button>
+      </Button>
     </form>
-  );
-}
-
-function TextField({
-  label,
-  name,
-  defaultValue,
-  type = "text",
-  step,
-  required,
-  textarea,
-}: {
-  label: string;
-  name: string;
-  defaultValue?: string | number;
-  type?: string;
-  step?: string;
-  required?: boolean;
-  textarea?: boolean;
-}) {
-  const className =
-    "w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground dark:border-white/20";
-
-  return (
-    <label className="block text-sm">
-      <span className="mb-1 block font-medium text-foreground">{label}</span>
-      {textarea ? (
-        <textarea
-          name={name}
-          defaultValue={defaultValue}
-          rows={3}
-          className={className}
-        />
-      ) : (
-        <input
-          name={name}
-          type={type}
-          step={step}
-          defaultValue={defaultValue}
-          required={required}
-          className={className}
-        />
-      )}
-    </label>
   );
 }

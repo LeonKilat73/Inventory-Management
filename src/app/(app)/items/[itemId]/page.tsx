@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
 import { updateItem } from "@/actions/items";
 import { ItemForm } from "../_components/ItemForm";
+import { Card } from "@/components/ui/Card";
 
 export default async function EditItemPage({
   params,
@@ -15,7 +16,7 @@ export default async function EditItemPage({
 
   if (permissions.items?.edit !== true) {
     return (
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-on-surface-variant">
         You don&apos;t have permission to edit items.
       </p>
     );
@@ -29,8 +30,8 @@ export default async function EditItemPage({
   if (!item) notFound();
 
   return (
-    <div className="max-w-xl">
-      <h1 className="mb-6 text-2xl font-semibold text-foreground">
+    <Card className="max-w-xl">
+      <h1 className="mb-6 text-2xl font-medium text-on-surface">
         Edit {item.name}
       </h1>
       <ItemForm
@@ -39,6 +40,6 @@ export default async function EditItemPage({
         defaults={item}
         submitLabel="Save changes"
       />
-    </div>
+    </Card>
   );
 }

@@ -5,7 +5,11 @@ import { RolePermissionForm } from "./_components/RolePermissionForm";
 export default async function AdminRolesPage() {
   const permissions = await getPermissions();
   if (permissions.roles?.view !== true) {
-    return <p className="text-sm text-zinc-500">You don&apos;t have permission to view roles.</p>;
+    return (
+      <p className="text-sm text-on-surface-variant">
+        You don&apos;t have permission to view roles.
+      </p>
+    );
   }
 
   const supabase = await createClient();
@@ -24,8 +28,8 @@ export default async function AdminRolesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Roles</h1>
-        <p className="text-sm text-zinc-500">
+        <h1 className="text-2xl font-medium text-on-surface">Roles</h1>
+        <p className="text-sm text-on-surface-variant">
           Default permissions per role. Individual users can still be granted or
           revoked specific actions from their user page.
         </p>
