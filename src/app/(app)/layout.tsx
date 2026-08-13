@@ -7,6 +7,9 @@ const NAV_ITEMS: { href: string; label: string; module: Module | null; icon: Nav
   { href: "/dashboard", label: "Dashboard", module: null, icon: "dashboard" },
   { href: "/items", label: "Items", module: "items", icon: "items" },
   { href: "/items/bundles", label: "Bundles", module: "bundles", icon: "bundles" },
+  { href: "/suppliers", label: "Suppliers", module: "suppliers", icon: "suppliers" },
+  { href: "/purchase-orders", label: "Purchase Orders", module: "purchase_orders", icon: "purchaseOrders" },
+  { href: "/stock/movements", label: "Stock Movements", module: "stock_movements", icon: "stock" },
   { href: "/admin/users", label: "Users", module: "users", icon: "users" },
   { href: "/admin/roles", label: "Roles", module: "roles", icon: "roles" },
 ];

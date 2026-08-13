@@ -4,12 +4,13 @@ import { getPermissions } from "@/lib/auth/permissions";
 import { createItem, deleteItem } from "@/actions/items";
 import { ItemForm } from "./_components/ItemForm";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 
 export default async function ItemsPage() {
   const supabase = await createClient();
   const permissions = await getPermissions();
 
-  const [{ data: items }, { data: categories }] = await Promise.all([
+  const [{ data: items }, { data: categories }, { data: stockLevels }] = await Promise.all([
     supabase
       .from("items")
       .select(
@@ -18,7 +19,10 @@ export default async function ItemsPage() {
       .eq("is_bundle", false)
       .order("name"),
     supabase.from("categories").select("id, name").order("name"),
+    supabase.from("item_stock_levels").select("item_id, current_stock"),
   ]);
+
+  const stockByItemId = new Map((stockLevels ?? []).map((s) => [s.item_id, s.current_stock]));
 
   const canCreate = permissions.items?.create === true;
   const canEdit = permissions.items?.edit === true;
@@ -44,9 +48,9 @@ export default async function ItemsPage() {
               <th className="px-4 py-3 font-medium">SKU</th>
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Category</th>
+              <th className="px-4 py-3 font-medium">Stock</th>
               <th className="px-4 py-3 font-medium">Cost</th>
               <th className="px-4 py-3 font-medium">Price</th>
-              <th className="px-4 py-3 font-medium">Reorder at</th>
               {(canEdit || canDelete) && <th className="px-4 py-3" />}
             </tr>
           </thead>
@@ -55,6 +59,8 @@ export default async function ItemsPage() {
               const category = Array.isArray(item.categories)
                 ? item.categories[0]
                 : item.categories;
+              const stock = stockByItemId.get(item.id) ?? 0;
+              const lowStock = stock <= item.reorder_threshold;
               return (
                 <tr
                   key={item.id}
@@ -66,12 +72,17 @@ export default async function ItemsPage() {
                     {category?.name ?? "—"}
                   </td>
                   <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span>{stock}</span>
+                      {lowStock && <Badge tone="error">Reorder</Badge>}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
                     {item.unit_cost != null ? `$${item.unit_cost}` : "—"}
                   </td>
                   <td className="px-4 py-3">
                     {item.unit_price != null ? `$${item.unit_price}` : "—"}
                   </td>
-                  <td className="px-4 py-3">{item.reorder_threshold}</td>
                   {(canEdit || canDelete) && (
                     <td className="px-4 py-3 text-right">
                       <div className="flex justify-end gap-4">

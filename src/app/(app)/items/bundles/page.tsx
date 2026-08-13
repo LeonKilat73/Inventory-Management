@@ -3,6 +3,7 @@ import { getPermissions } from "@/lib/auth/permissions";
 import { deleteBundle } from "@/actions/items";
 import { BundleForm } from "./_components/BundleForm";
 import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 
 type BundleRow = {
   id: string;
@@ -19,7 +20,7 @@ export default async function BundlesPage() {
   const supabase = await createClient();
   const permissions = await getPermissions();
 
-  const [{ data: bundles }, { data: plainItems }] = await Promise.all([
+  const [{ data: bundles }, { data: plainItems }, { data: availability }] = await Promise.all([
     supabase
       .from("items")
       .select(
@@ -29,7 +30,10 @@ export default async function BundlesPage() {
       .order("name")
       .returns<BundleRow[]>(),
     supabase.from("items").select("id, sku, name").eq("is_bundle", false).order("name"),
+    supabase.from("bundle_stock_levels").select("bundle_id, available"),
   ]);
+
+  const availableByBundleId = new Map((availability ?? []).map((a) => [a.bundle_id, a.available]));
 
   const canCreate = permissions.bundles?.create === true;
   const canDelete = permissions.bundles?.delete === true;
@@ -51,6 +55,9 @@ export default async function BundlesPage() {
               <div>
                 <p className="font-medium text-on-surface">{bundle.name}</p>
                 <p className="font-mono text-xs text-on-surface-variant">{bundle.sku}</p>
+                <Badge tone="secondary" className="mt-2">
+                  {availableByBundleId.get(bundle.id) ?? 0} available
+                </Badge>
               </div>
               <div className="flex items-center gap-4">
                 <p className="font-medium text-on-surface">

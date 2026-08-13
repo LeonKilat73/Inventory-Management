@@ -4,7 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/actions/auth";
 
-export type NavIcon = "dashboard" | "items" | "bundles" | "users" | "roles";
+export type NavIcon =
+  | "dashboard"
+  | "items"
+  | "bundles"
+  | "suppliers"
+  | "purchaseOrders"
+  | "stock"
+  | "users"
+  | "roles";
 type NavItem = { href: string; label: string; icon: NavIcon };
 
 const icons: Record<NavIcon, React.ReactNode> = {
@@ -40,6 +48,26 @@ const icons: Record<NavIcon, React.ReactNode> = {
     <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
       <path d="M10 2 16.5 4.5v5c0 4-2.7 6.9-6.5 8.5-3.8-1.6-6.5-4.5-6.5-8.5v-5L10 2Z" strokeLinejoin="round" />
       <path d="m7.3 10 1.9 1.9 3.5-3.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  suppliers: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <path d="M1.7 5.3h9v8.4h-9z" strokeLinejoin="round" />
+      <path d="M10.7 8.3h4l2.6 2.9v2.5h-6.6z" strokeLinejoin="round" />
+      <circle cx="5.2" cy="15.7" r="1.5" />
+      <circle cx="13.3" cy="15.7" r="1.5" />
+    </svg>
+  ),
+  purchaseOrders: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <path d="M6 2.5h8a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1Z" strokeLinejoin="round" />
+      <path d="M7.5 1.7h5v2h-5zM6.8 8h6.4M6.8 11h6.4M6.8 14h3.5" strokeLinecap="round" />
+    </svg>
+  ),
+  stock: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <path d="M3.5 16.5v-6M9 16.5v-10M14.5 16.5v-3.5" strokeLinecap="round" />
+      <path d="M2.5 16.5h15" strokeLinecap="round" />
     </svg>
   ),
 };
