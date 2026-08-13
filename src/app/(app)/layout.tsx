@@ -1,14 +1,14 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser, getPermissions } from "@/lib/auth/permissions";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppSidebar, type NavIcon } from "@/components/AppSidebar";
 import type { Module } from "@/lib/auth/types";
 
-const NAV_ITEMS: { href: string; label: string; module: Module | null }[] = [
-  { href: "/dashboard", label: "Dashboard", module: null },
-  { href: "/items", label: "Items", module: "items" },
-  { href: "/items/bundles", label: "Bundles", module: "bundles" },
-  { href: "/admin/users", label: "Users", module: "users" },
-  { href: "/admin/roles", label: "Roles", module: "roles" },
+const NAV_ITEMS: { href: string; label: string; module: Module | null; icon: NavIcon }[] = [
+  { href: "/dashboard", label: "Dashboard", module: null, icon: "dashboard" },
+  { href: "/items", label: "Items", module: "items", icon: "items" },
+  { href: "/items/bundles", label: "Bundles", module: "bundles", icon: "bundles" },
+  { href: "/admin/users", label: "Users", module: "users", icon: "users" },
+  { href: "/admin/roles", label: "Roles", module: "roles", icon: "roles" },
 ];
 
 export default async function AppLayout({
