@@ -24,8 +24,20 @@ export function AuditDiff({
   if (!oldData && !newData) return null;
 
   const keys = Array.from(new Set([...Object.keys(oldData ?? {}), ...Object.keys(newData ?? {})])).sort();
+  // updated_at changes on every update alongside whatever actually changed
+  // (or, previously, on its own for a no-op save -- now skipped at the
+  // trigger level, but older rows can still have it) -- it's never itself
+  // the meaningful part of a diff, so it's excluded from the comparison.
   const changedKeys =
-    action === "update" ? keys.filter((k) => JSON.stringify(oldData?.[k]) !== JSON.stringify(newData?.[k])) : keys;
+    action === "update"
+      ? keys.filter((k) => k !== "updated_at" && JSON.stringify(oldData?.[k]) !== JSON.stringify(newData?.[k]))
+      : keys;
+
+  if (action === "update" && changedKeys.length === 0) {
+    // Pre-fix rows from before the audit trigger started skipping true
+    // no-op updates -- nothing meaningful to show, so don't invite a click.
+    return <span className="text-sm text-on-surface-variant">No meaningful changes</span>;
+  }
 
   return (
     <div>
