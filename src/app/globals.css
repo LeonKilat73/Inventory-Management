@@ -50,8 +50,13 @@
   --qb-sidebar-active-fg: #ffffff;
 }
 
+/* Dark tokens apply two ways: automatically when the OS prefers dark (unless
+   the user has explicitly chosen light via the toggle), or unconditionally
+   when the user has explicitly chosen dark. Never given a single combined
+   selector -- duplicated on purpose so each direction of the toggle wins
+   over the OS preference. See ThemeToggle.tsx for how data-theme gets set. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --md-primary: #7fdb6a;
     --md-on-primary: #0a3d05;
     --md-primary-container: #1c5c11;
@@ -96,6 +101,48 @@
     --qb-sidebar-active: #1f5148;
     --qb-sidebar-active-fg: #ffffff;
   }
+}
+
+:root[data-theme="dark"] {
+  --md-primary: #7fdb6a;
+  --md-on-primary: #0a3d05;
+  --md-primary-container: #1c5c11;
+  --md-on-primary-container: #d7f0d1;
+
+  --md-secondary: #b7c7c1;
+  --md-on-secondary: #263330;
+  --md-secondary-container: #33403c;
+  --md-on-secondary-container: #d7e4e0;
+
+  --md-tertiary: #9dcbfb;
+  --md-on-tertiary: #063056;
+  --md-tertiary-container: #12456f;
+  --md-on-tertiary-container: #d5e6f9;
+
+  --md-error: #ffb4ab;
+  --md-on-error: #690005;
+  --md-error-container: #93000a;
+  --md-on-error-container: #ffdad6;
+
+  --md-background: #171d1b;
+  --md-surface: #171d1b;
+  --md-surface-container-lowest: #101513;
+  --md-surface-container-low: #1c2321;
+  --md-surface-container: #212927;
+  --md-surface-container-high: #28312e;
+  --md-surface-container-highest: #303a36;
+  --md-on-surface: #e6ebe8;
+  --md-on-surface-variant: #a8b6b1;
+
+  --md-outline: #7c8b86;
+  --md-outline-variant: #37403d;
+
+  --qb-sidebar-bg: #0c211d;
+  --qb-sidebar-hover: #143028;
+  --qb-sidebar-fg: #d7e4e1;
+  --qb-sidebar-fg-muted: #86a099;
+  --qb-sidebar-active: #1f5148;
+  --qb-sidebar-active-fg: #ffffff;
 }
 
 @theme inline {
