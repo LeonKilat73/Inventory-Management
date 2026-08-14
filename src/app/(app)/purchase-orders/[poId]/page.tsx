@@ -6,6 +6,7 @@ import { ReceiveLineForm } from "../_components/ReceiveLineForm";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { BackLink } from "@/components/ui/BackLink";
 
 const STATUS_TONE = {
   draft: "neutral",
@@ -62,6 +63,8 @@ export default async function PurchaseOrderDetailPage({
 
   return (
     <div className="max-w-3xl space-y-8">
+      <BackLink href="/purchase-orders" label="Purchase Orders" />
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-medium text-on-surface">{po.po_number}</h1>

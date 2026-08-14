@@ -39,5 +39,9 @@ export async function recordStockMovement(
   revalidatePath("/stock/movements");
   revalidatePath("/items");
   revalidatePath("/items/bundles");
+  // Covers every /items/[itemId] page, not just one -- this action is also
+  // called from the item edit page's quick-adjust form, and it doesn't know
+  // ahead of time which item's detail page (if any) needs a refresh.
+  revalidatePath("/items/[itemId]", "page");
   return ok;
 }

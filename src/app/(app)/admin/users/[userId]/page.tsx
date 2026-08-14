@@ -5,6 +5,7 @@ import { RoleForm } from "../_components/RoleForm";
 import { OverrideGrid } from "../_components/OverrideGrid";
 import { NotificationPreferencesForm } from "../_components/NotificationPreferencesForm";
 import { Card } from "@/components/ui/Card";
+import { BackLink } from "@/components/ui/BackLink";
 
 export default async function ManageUserPage({
   params,
@@ -56,9 +57,15 @@ export default async function ManageUserPage({
 
   const canEdit = permissions.users?.edit === true;
   const canEditPreferences = canEdit || isSelf;
+  const canViewUsersList = permissions.users?.view === true;
 
   return (
     <div className="max-w-4xl space-y-8">
+      <BackLink
+        href={canViewUsersList ? "/admin/users" : "/notifications"}
+        label={canViewUsersList ? "Users" : "Notifications"}
+      />
+
       <div>
         <h1 className="text-2xl font-medium text-on-surface">{profile.full_name}</h1>
         <p className="text-sm text-on-surface-variant">{profile.email}</p>

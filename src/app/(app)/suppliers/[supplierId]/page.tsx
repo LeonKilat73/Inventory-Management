@@ -4,6 +4,7 @@ import { getPermissions } from "@/lib/auth/permissions";
 import { updateSupplier } from "@/actions/suppliers";
 import { SupplierForm } from "../_components/SupplierForm";
 import { Card } from "@/components/ui/Card";
+import { BackLink } from "@/components/ui/BackLink";
 
 export default async function EditSupplierPage({
   params,
@@ -31,11 +32,14 @@ export default async function EditSupplierPage({
   if (!supplier) notFound();
 
   return (
-    <Card className="max-w-xl">
-      <h1 className="mb-6 text-2xl font-medium text-on-surface">
-        Edit {supplier.name}
-      </h1>
-      <SupplierForm action={updateSupplier} defaults={supplier} submitLabel="Save changes" />
-    </Card>
+    <div className="max-w-xl">
+      <BackLink href="/suppliers" label="Suppliers" />
+      <Card>
+        <h1 className="mb-6 text-2xl font-medium text-on-surface">
+          Edit {supplier.name}
+        </h1>
+        <SupplierForm action={updateSupplier} defaults={supplier} submitLabel="Save changes" />
+      </Card>
+    </div>
   );
 }
