@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/actions/auth";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export type NavIcon =
   | "dashboard"
@@ -15,7 +16,9 @@ export type NavIcon =
   | "calendar"
   | "expenses"
   | "users"
-  | "roles";
+  | "roles"
+  | "auditLog"
+  | "apiKeys";
 type NavItem = { href: string; label: string; icon: NavIcon };
 
 const icons: Record<NavIcon, React.ReactNode> = {
@@ -92,24 +95,41 @@ const icons: Record<NavIcon, React.ReactNode> = {
       <path d="M10 5.8v8.4M12.5 7.8c0-1-1.1-1.8-2.5-1.8s-2.4.8-2.4 1.8.9 1.4 2.4 1.7c1.6.3 2.5.8 2.5 1.9s-1.1 1.8-2.5 1.8-2.5-.6-2.5-1.7" strokeLinecap="round" />
     </svg>
   ),
+  auditLog: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <path d="M4 2.5h9l3 3v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1Z" strokeLinejoin="round" />
+      <path d="M6.5 9h7M6.5 12h7M6.5 15h4.5" strokeLinecap="round" />
+    </svg>
+  ),
+  apiKeys: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <circle cx="6.3" cy="13.7" r="3.3" />
+      <path d="m8.6 11.4 7.9-7.9M13.5 6l2 2M16 3.5l2 2" strokeLinecap="round" />
+    </svg>
+  ),
 };
 
 export function AppSidebar({
   navItems,
   fullName,
   roleName,
+  userId,
 }: {
   navItems: NavItem[];
   fullName: string;
   roleName: string;
+  userId: string;
 }) {
   const pathname = usePathname();
 
   return (
     <aside className="flex w-64 flex-col bg-sidebar">
-      <div className="px-6 py-5">
-        <p className="text-base font-medium text-white">Inventory</p>
-        <p className="text-xs text-sidebar-foreground-muted">Car accessories</p>
+      <div className="flex items-start justify-between px-6 py-5">
+        <div>
+          <p className="text-base font-medium text-white">Inventory</p>
+          <p className="text-xs text-sidebar-foreground-muted">Car accessories</p>
+        </div>
+        <NotificationBell userId={userId} />
       </div>
       <nav className="flex-1 space-y-1 px-3">
         {navItems.map((item) => {

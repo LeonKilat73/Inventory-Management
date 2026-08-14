@@ -11,6 +11,7 @@ export const MODULES = [
   "audit_log",
   "users",
   "roles",
+  "api_keys",
 ] as const;
 
 export const ACTIONS = [

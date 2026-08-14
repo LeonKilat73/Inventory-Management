@@ -16,3 +16,53 @@ export async function getCurrentStock(supabase: SupabaseClient<any>, itemId: str
   if (error) throw new Error(error.message);
   return data.current_stock as number;
 }
+
+export type ManualMovementType = "sale" | "replacement_out" | "replacement_in" | "manual_adjustment";
+
+export type RecordMovementInput = {
+  itemId: string;
+  movementType: ManualMovementType;
+  direction?: "increase" | "decrease";
+  quantity: number;
+  note?: string | null;
+  createdBy: string | null;
+};
+
+// Shared by the internal server action (src/actions/stockMovements.ts, gated
+// by requirePermission) and the external API route (src/app/api/v1/stock-movements,
+// gated by an API key) so the over-sell guard can't drift between the two
+// entry points. Callers are responsible for authorization -- this only
+// enforces the data invariant (never go negative).
+export async function recordStockMovement(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: SupabaseClient<any>,
+  input: RecordMovementInput,
+) {
+  const isDecrease =
+    input.movementType === "sale" ||
+    input.movementType === "replacement_out" ||
+    (input.movementType === "manual_adjustment" && input.direction === "decrease");
+
+  if (input.movementType === "manual_adjustment" && !input.direction) {
+    throw new Error("Pick whether this adjustment increases or decreases stock.");
+  }
+
+  const quantityDelta = isDecrease ? -input.quantity : input.quantity;
+
+  if (isDecrease) {
+    const currentStock = await getCurrentStock(supabase, input.itemId);
+    if (currentStock + quantityDelta < 0) {
+      throw new Error(`Only ${currentStock} in stock -- can't remove ${input.quantity}.`);
+    }
+  }
+
+  const { error } = await supabase.from("stock_movements").insert({
+    item_id: input.itemId,
+    quantity_delta: quantityDelta,
+    movement_type: input.movementType,
+    note: input.note || null,
+    created_by: input.createdBy,
+  });
+
+  if (error) throw new Error(error.message);
+}

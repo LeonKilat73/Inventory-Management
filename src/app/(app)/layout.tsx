@@ -15,6 +15,8 @@ const NAV_ITEMS: { href: string; label: string; module: Module | null; icon: Nav
   { href: "/expenses", label: "Expenses", module: "expenses", icon: "expenses" },
   { href: "/admin/users", label: "Users", module: "users", icon: "users" },
   { href: "/admin/roles", label: "Roles", module: "roles", icon: "roles" },
+  { href: "/audit-log", label: "Audit Log", module: "audit_log", icon: "auditLog" },
+  { href: "/admin/api-keys", label: "API Keys", module: "api_keys", icon: "apiKeys" },
 ];
 
 export default async function AppLayout({
@@ -36,6 +38,7 @@ export default async function AppLayout({
         navItems={visibleNavItems}
         fullName={user.fullName}
         roleName={user.roleName}
+        userId={user.id}
       />
       <main className="flex-1 overflow-y-auto p-8">{children}</main>
     </div>
