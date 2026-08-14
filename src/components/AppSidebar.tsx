@@ -11,6 +11,9 @@ export type NavIcon =
   | "suppliers"
   | "purchaseOrders"
   | "stock"
+  | "defective"
+  | "calendar"
+  | "expenses"
   | "users"
   | "roles";
 type NavItem = { href: string; label: string; icon: NavIcon };
@@ -68,6 +71,25 @@ const icons: Record<NavIcon, React.ReactNode> = {
     <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
       <path d="M3.5 16.5v-6M9 16.5v-10M14.5 16.5v-3.5" strokeLinecap="round" />
       <path d="M2.5 16.5h15" strokeLinecap="round" />
+    </svg>
+  ),
+  defective: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <path d="M10 2.3 18 16.3H2L10 2.3Z" strokeLinejoin="round" />
+      <path d="M10 8v3.5" strokeLinecap="round" />
+      <circle cx="10" cy="14" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  calendar: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <rect x="2.5" y="3.8" width="15" height="13.5" rx="1.5" strokeLinejoin="round" />
+      <path d="M2.5 8h15M6 2v3.2M14 2v3.2" strokeLinecap="round" />
+    </svg>
+  ),
+  expenses: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <circle cx="10" cy="10" r="7.3" />
+      <path d="M10 5.8v8.4M12.5 7.8c0-1-1.1-1.8-2.5-1.8s-2.4.8-2.4 1.8.9 1.4 2.4 1.7c1.6.3 2.5.8 2.5 1.9s-1.1 1.8-2.5 1.8-2.5-.6-2.5-1.7" strokeLinecap="round" />
     </svg>
   ),
 };
