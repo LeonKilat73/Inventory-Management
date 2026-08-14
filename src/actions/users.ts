@@ -7,7 +7,7 @@ import { requirePermission } from "@/lib/auth/requirePermission";
 import { MODULES, ACTIONS } from "@/lib/auth/types";
 import { getSiteOrigin } from "@/lib/getSiteOrigin";
 
-export type ActionState = { error: string | null };
+export type ActionState = { error: string | null; info?: string | null };
 const ok: ActionState = { error: null };
 
 const USERNAME_RE = /^[a-z0-9_.]{3,32}$/;
@@ -197,4 +197,89 @@ export async function unsuspendUser(
   revalidatePath(`/admin/users/${userId}`);
   revalidatePath("/admin/users");
   return ok;
+}
+
+// Soft-delete: there's no hard-delete for a user account, on purpose --
+// profiles.id is referenced all over (audit_log, stock_movements, purchase
+// orders, etc.), so removing the row outright would either be blocked by
+// those foreign keys or silently erase who-did-what history. Deactivating
+// (is_active) blocks sign-in and every permission check (fn_has_permission)
+// the same way suspension does, while keeping their history intact.
+export async function setUserActive(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actingUser = await requirePermission("users", "edit");
+
+  const userId = String(formData.get("userId") ?? "");
+  const active = formData.get("active") === "true";
+  if (!userId) return { error: "Missing user id." };
+
+  if (userId === actingUser.id) {
+    return {
+      error: `You cannot ${active ? "reactivate" : "deactivate"} your own account. Ask another admin to do it.`,
+    };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ is_active: active }).eq("id", userId);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath("/admin/users");
+  return ok;
+}
+
+// An explicit, manual lock a manager/admin can flip on or off at will --
+// unlike is_suspended (triggered by the failed-login ladder), this never
+// requires a password reset to clear.
+export async function setUserLocked(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actingUser = await requirePermission("users", "edit");
+
+  const userId = String(formData.get("userId") ?? "");
+  const locked = formData.get("locked") === "true";
+  if (!userId) return { error: "Missing user id." };
+
+  if (userId === actingUser.id) {
+    return { error: `You cannot ${locked ? "lock" : "unlock"} your own account. Ask another admin to do it.` };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ admin_locked: locked }).eq("id", userId);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath("/admin/users");
+  return ok;
+}
+
+// Admin-triggered version of the "Forgot password?" flow on the login page
+// -- same underlying Supabase call, just started from the user's own page
+// instead of them requesting it themselves.
+export async function sendPasswordResetEmail(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requirePermission("users", "edit");
+
+  const userId = String(formData.get("userId") ?? "");
+  if (!userId) return { error: "Missing user id." };
+
+  const supabase = await createClient();
+  const { data: profile, error: fetchError } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("id", userId)
+    .single();
+  if (fetchError) return { error: fetchError.message };
+
+  const origin = await getSiteOrigin();
+  await supabase.auth.resetPasswordForEmail(profile.email, {
+    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+  });
+
+  return { error: null, info: `Password reset email sent to ${profile.email}.` };
 }

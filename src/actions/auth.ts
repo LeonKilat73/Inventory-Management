@@ -30,15 +30,21 @@ export async function login(
   const admin = createAdminClient();
   const { data: profile } = await admin
     .from("profiles")
-    .select("id, email, is_suspended, locked_until")
+    .select("id, email, is_active, is_suspended, admin_locked, locked_until")
     .or(`email.eq.${identifier},username.eq.${identifier}`)
     .maybeSingle();
 
   if (!profile) {
     return { error: "Invalid email/username or password." };
   }
+  if (!profile.is_active) {
+    return { error: "This account has been deactivated. Contact a manager or admin." };
+  }
   if (profile.is_suspended) {
     return { error: SUSPEND_MESSAGE };
+  }
+  if (profile.admin_locked) {
+    return { error: "This account has been locked by an admin. Contact a manager or admin to unlock it." };
   }
   if (profile.locked_until && new Date(profile.locked_until) > new Date()) {
     const minutes = Math.max(

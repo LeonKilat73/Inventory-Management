@@ -6,6 +6,7 @@ import { OverrideGrid } from "../_components/OverrideGrid";
 import { NotificationPreferencesForm } from "../_components/NotificationPreferencesForm";
 import { UsernameForm } from "../_components/UsernameForm";
 import { SecurityStatusCard } from "../_components/SecurityStatusCard";
+import { AccountActionsCard } from "../_components/AccountActionsCard";
 import { Card } from "@/components/ui/Card";
 import { BackLink } from "@/components/ui/BackLink";
 
@@ -34,7 +35,7 @@ export default async function ManageUserPage({
       supabase
         .from("profiles")
         .select(
-          "id, full_name, email, role_id, username, failed_login_count, locked_until, is_suspended, password_reset_required",
+          "id, full_name, email, role_id, username, failed_login_count, locked_until, is_suspended, password_reset_required, is_active, admin_locked",
         )
         .eq("id", userId)
         .single(),
@@ -81,6 +82,18 @@ export default async function ManageUserPage({
           {profile.username && <> · @{profile.username}</>}
         </p>
       </div>
+
+      {canEdit && (
+        <Card>
+          <h2 className="mb-3 text-lg font-medium text-on-surface">Account actions</h2>
+          <AccountActionsCard
+            userId={profile.id}
+            isActive={profile.is_active}
+            adminLocked={profile.admin_locked}
+            isSelf={actingUser?.id === profile.id}
+          />
+        </Card>
+      )}
 
       {canEdit && (
         <Card>

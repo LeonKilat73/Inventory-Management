@@ -11,6 +11,7 @@ type UserRow = {
   email: string;
   is_active: boolean;
   is_suspended: boolean;
+  admin_locked: boolean;
   locked_until: string | null;
   roles: { name: string } | { name: string }[] | null;
 };
@@ -29,7 +30,7 @@ export default async function AdminUsersPage() {
   const [{ data: users }, { data: roles }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, email, is_active, is_suspended, locked_until, roles(name)")
+      .select("id, full_name, email, is_active, is_suspended, admin_locked, locked_until, roles(name)")
       .order("full_name")
       .returns<UserRow[]>(),
     supabase.from("roles").select("id, name").order("name"),
@@ -77,7 +78,8 @@ export default async function AdminUsersPage() {
                         {u.is_active ? "Active" : "Inactive"}
                       </Badge>
                       {u.is_suspended && <Badge tone="error">Suspended</Badge>}
-                      {!u.is_suspended && u.locked_until && new Date(u.locked_until) > new Date() && (
+                      {u.admin_locked && <Badge tone="error">Locked by admin</Badge>}
+                      {!u.is_suspended && !u.admin_locked && u.locked_until && new Date(u.locked_until) > new Date() && (
                         <Badge tone="error">Locked</Badge>
                       )}
                     </div>
