@@ -100,12 +100,6 @@ export function ItemForm({
         <TextField label="Name" name="name" defaultValue={defaults?.name} required />
       </div>
 
-      <TextAreaField
-        label="Description"
-        name="description"
-        defaultValue={defaults?.description ?? ""}
-      />
-
       <div className="grid grid-cols-2 gap-4">
         <SelectField
           label="Category"
@@ -128,6 +122,12 @@ export function ItemForm({
           defaultValue={defaults?.unit_price ?? undefined}
         />
       </div>
+
+      <TextAreaField
+        label="Description"
+        name="description"
+        defaultValue={defaults?.description ?? ""}
+      />
 
       <div className="grid grid-cols-3 gap-4">
         <TextField
