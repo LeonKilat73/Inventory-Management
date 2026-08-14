@@ -33,9 +33,13 @@ export function BundleForm({ items }: { items: Item[] }) {
         <span className="block text-sm font-medium text-on-surface-variant">
           Constituent items
         </span>
+        <div className="grid grid-cols-[1fr_96px] gap-3 text-xs font-medium text-on-surface-variant">
+          <span>Item</span>
+          <span>Quantity</span>
+        </div>
         {Array.from({ length: rowCount }).map((_, i) => (
-          <div key={i} className="flex gap-3">
-            <SelectField label="" name="itemId" required className="flex-1">
+          <div key={i} className="grid grid-cols-[1fr_96px] gap-3">
+            <SelectField label="" name="itemId" required>
               <option value="">Select an item…</option>
               {items.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -50,7 +54,6 @@ export function BundleForm({ items }: { items: Item[] }) {
               min={1}
               defaultValue={1}
               required
-              className="w-24"
             />
           </div>
         ))}

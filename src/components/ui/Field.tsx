@@ -22,7 +22,7 @@ export function TextField({
 }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
     <label className={`block ${className}`}>
-      <FieldLabel>{label}</FieldLabel>
+      {label && <FieldLabel>{label}</FieldLabel>}
       <input className={fieldClass} {...props} />
     </label>
   );
@@ -35,7 +35,7 @@ export function TextAreaField({
 }: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
   return (
     <label className={`block ${className}`}>
-      <FieldLabel>{label}</FieldLabel>
+      {label && <FieldLabel>{label}</FieldLabel>}
       <textarea className={fieldClass} rows={3} {...props} />
     </label>
   );
@@ -52,7 +52,7 @@ export function SelectField({
 }) {
   return (
     <label className={`block ${className}`}>
-      <FieldLabel>{label}</FieldLabel>
+      {label && <FieldLabel>{label}</FieldLabel>}
       <select className={fieldClass} {...props}>
         {children}
       </select>
