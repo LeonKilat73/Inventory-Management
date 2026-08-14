@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import type { ActionState } from "@/actions/items";
 import { Button } from "@/components/ui/Button";
 import { TextField, TextAreaField, SelectField } from "@/components/ui/Field";
@@ -26,13 +26,25 @@ export function ItemForm({
   categories,
   defaults,
   submitLabel,
+  onSuccess,
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   categories: Category[];
   defaults?: ItemDefaults;
   submitLabel: string;
+  onSuccess?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(action, initialState);
+
+  // Fires once, right after a submission completes without error -- not on
+  // initial mount, since wasPending only becomes true after a real submit.
+  const wasPending = useRef(false);
+  useEffect(() => {
+    if (wasPending.current && !pending && !state.error) {
+      onSuccess?.();
+    }
+    wasPending.current = pending;
+  }, [pending, state, onSuccess]);
 
   return (
     <form action={formAction} className="space-y-4">

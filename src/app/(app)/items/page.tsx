@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
-import { createItem, deleteItem } from "@/actions/items";
-import { ItemForm } from "./_components/ItemForm";
-import { Card } from "@/components/ui/Card";
+import { deleteItem } from "@/actions/items";
+import { AddItemButton } from "./_components/AddItemButton";
 import { Badge } from "@/components/ui/Badge";
 
 export default async function ItemsPage() {
@@ -30,15 +29,18 @@ export default async function ItemsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-medium text-on-surface">Items</h1>
-        <p className="text-sm text-on-surface-variant">
-          Catalog of individual items. See{" "}
-          <Link href="/items/bundles" className="text-primary underline underline-offset-2">
-            Bundles
-          </Link>{" "}
-          for packages made of multiple items.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-medium text-on-surface">Items</h1>
+          <p className="text-sm text-on-surface-variant">
+            Catalog of individual items. See{" "}
+            <Link href="/items/bundles" className="text-primary underline underline-offset-2">
+              Bundles
+            </Link>{" "}
+            for packages made of multiple items.
+          </p>
+        </div>
+        {canCreate && <AddItemButton categories={categories ?? []} />}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
@@ -123,17 +125,6 @@ export default async function ItemsPage() {
           </tbody>
         </table>
       </div>
-
-      {canCreate && (
-        <Card className="max-w-xl">
-          <h2 className="mb-4 text-lg font-medium text-on-surface">New item</h2>
-          <ItemForm
-            action={createItem}
-            categories={categories ?? []}
-            submitLabel="Create item"
-          />
-        </Card>
-      )}
     </div>
   );
 }
