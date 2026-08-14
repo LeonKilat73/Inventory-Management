@@ -7,11 +7,20 @@ import { updateCategory } from "@/actions/categories";
 type Category = {
   id: string;
   name: string;
+  parent_id: string | null;
   sku_prefix: string | null;
   sku_next_number: number;
 };
 
-export function EditCategoryButton({ category }: { category: Category }) {
+type ParentOption = { id: string; name: string };
+
+export function EditCategoryButton({
+  category,
+  parentOptions,
+}: {
+  category: Category;
+  parentOptions: ParentOption[];
+}) {
   return (
     <Modal
       title="Edit category"
@@ -22,7 +31,13 @@ export function EditCategoryButton({ category }: { category: Category }) {
       )}
     >
       {(close) => (
-        <CategoryForm action={updateCategory} defaults={category} submitLabel="Save changes" onSuccess={close} />
+        <CategoryForm
+          action={updateCategory}
+          defaults={category}
+          parentOptions={parentOptions.filter((p) => p.id !== category.id)}
+          submitLabel="Save changes"
+          onSuccess={close}
+        />
       )}
     </Modal>
   );

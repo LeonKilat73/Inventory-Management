@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
+import { buildCategoryOptions } from "@/lib/categoryOptions";
 import { updateItem } from "@/actions/items";
 import { ItemForm } from "../_components/ItemForm";
 import { QuickAdjustStockForm } from "../_components/QuickAdjustStockForm";
@@ -26,7 +27,7 @@ export default async function EditItemPage({
 
   const [{ data: item }, { data: categories }, { data: stockLevel }] = await Promise.all([
     supabase.from("items").select("*").eq("id", itemId).single(),
-    supabase.from("categories").select("id, name").order("name"),
+    supabase.from("categories").select("id, name, parent_id").order("name"),
     supabase.from("item_stock_levels").select("current_stock").eq("item_id", itemId).single(),
   ]);
 
@@ -44,7 +45,7 @@ export default async function EditItemPage({
         </h1>
         <ItemForm
           action={updateItem}
-          categories={categories ?? []}
+          categories={buildCategoryOptions(categories ?? [])}
           defaults={item}
           submitLabel="Save changes"
         />

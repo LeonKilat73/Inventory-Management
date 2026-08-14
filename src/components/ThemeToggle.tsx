@@ -34,7 +34,11 @@ function getServerSnapshot(): Theme | null {
   return null;
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({
+  className = "text-on-surface-variant hover:bg-surface-container-high",
+}: {
+  className?: string;
+}) {
   const theme = useSyncExternalStore<Theme | null>(subscribe, readTheme, getServerSnapshot);
 
   if (theme === null) {
@@ -47,7 +51,7 @@ export function ThemeToggle() {
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
       title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
-      className="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container-high"
+      className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors ${className}`}
     >
       {theme === "dark" ? (
         <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor" className="h-5 w-5">

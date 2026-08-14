@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
+import { buildCategoryOptions } from "@/lib/categoryOptions";
 import { AddItemButton } from "./_components/AddItemButton";
 import { ItemsTable, type ItemRow } from "./_components/ItemsTable";
 
@@ -16,7 +17,7 @@ export default async function ItemsPage() {
       )
       .eq("is_bundle", false)
       .order("name"),
-    supabase.from("categories").select("id, name").order("name"),
+    supabase.from("categories").select("id, name, parent_id").order("name"),
     supabase.from("item_stock_levels").select("item_id, current_stock"),
   ]);
 
@@ -59,7 +60,7 @@ export default async function ItemsPage() {
             to manage SKU prefixes.
           </p>
         </div>
-        {canCreate && <AddItemButton categories={categories ?? []} />}
+        {canCreate && <AddItemButton categories={buildCategoryOptions(categories ?? [])} />}
       </div>
 
       <ItemsTable items={rows} categoryNames={categoryNames} canEdit={canEdit} canDelete={canDelete} />

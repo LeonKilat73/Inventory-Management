@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/actions/auth";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export type NavIcon =
   | "dashboard"
@@ -129,7 +130,10 @@ export function AppSidebar({
           <p className="text-base font-medium text-white">Inventory</p>
           <p className="text-xs text-sidebar-foreground-muted">Car accessories</p>
         </div>
-        <NotificationBell userId={userId} />
+        <div className="flex items-center gap-1">
+          <ThemeToggle className="text-sidebar-foreground hover:bg-sidebar-hover" />
+          <NotificationBell userId={userId} />
+        </div>
       </div>
       <nav className="flex-1 space-y-1 px-3">
         {navItems.map((item) => {

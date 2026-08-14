@@ -10,6 +10,7 @@ const ok: ActionState = { error: null };
 
 const categorySchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
+  parentId: z.string().uuid().optional().or(z.literal("")),
   skuPrefix: z
     .string()
     .trim()
@@ -23,6 +24,7 @@ const categorySchema = z.object({
 function parseCategoryFormData(formData: FormData) {
   return categorySchema.safeParse({
     name: formData.get("name"),
+    parentId: formData.get("parentId") ?? "",
     skuPrefix: formData.get("skuPrefix") ?? "",
     skuNextNumber: formData.get("skuNextNumber") || 1,
   });
@@ -43,6 +45,7 @@ export async function createCategory(
   const supabase = await createClient();
   const { error } = await supabase.from("categories").insert({
     name: v.name,
+    parent_id: v.parentId || null,
     sku_prefix: v.skuPrefix || null,
     sku_next_number: v.skuNextNumber,
   });
@@ -68,11 +71,16 @@ export async function updateCategory(
   }
   const v = parsed.data;
 
+  if (v.parentId === id) {
+    return { error: "A category can't be its own parent." };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("categories")
     .update({
       name: v.name,
+      parent_id: v.parentId || null,
       sku_prefix: v.skuPrefix || null,
       sku_next_number: v.skuNextNumber,
     })
@@ -84,6 +92,9 @@ export async function updateCategory(
   return ok;
 }
 
+// Read-only -- doesn't consume a number, just shows what the next one would
+// be. Composes the parent's prefix in for a brand sub-category, matching
+// what fn_next_sku actually generates at save time (see items.ts createItem).
 export async function previewNextSku(categoryId: string): Promise<string | null> {
   await requirePermission("items", "view");
   if (!categoryId) return null;
@@ -91,10 +102,13 @@ export async function previewNextSku(categoryId: string): Promise<string | null>
   const supabase = await createClient();
   const { data } = await supabase
     .from("categories")
-    .select("sku_prefix, sku_next_number")
+    .select("sku_prefix, sku_next_number, parent:parent_id(sku_prefix)")
     .eq("id", categoryId)
     .single();
 
   if (!data?.sku_prefix) return null;
-  return `${data.sku_prefix}-${String(data.sku_next_number).padStart(4, "0")}`;
+
+  const parent = Array.isArray(data.parent) ? data.parent[0] : data.parent;
+  const number = String(data.sku_next_number).padStart(4, "0");
+  return parent?.sku_prefix ? `${parent.sku_prefix}-${data.sku_prefix}-${number}` : `${data.sku_prefix}-${number}`;
 }

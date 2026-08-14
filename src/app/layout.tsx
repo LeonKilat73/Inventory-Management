@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Roboto, Geist_Mono } from "next/font/google";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -40,9 +39,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col bg-background text-on-surface">
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-        <div className="fixed right-4 top-4 z-50">
-          <ThemeToggle />
-        </div>
         {children}
       </body>
     </html>

@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/Button";
 import { CategoryForm } from "./CategoryForm";
 import { createCategory } from "@/actions/categories";
 
-export function AddCategoryButton() {
+type ParentOption = { id: string; name: string };
+
+export function AddCategoryButton({ parentOptions }: { parentOptions: ParentOption[] }) {
   return (
     <Modal
       title="New category"
@@ -15,7 +17,14 @@ export function AddCategoryButton() {
         </Button>
       )}
     >
-      {(close) => <CategoryForm action={createCategory} submitLabel="Create category" onSuccess={close} />}
+      {(close) => (
+        <CategoryForm
+          action={createCategory}
+          parentOptions={parentOptions}
+          submitLabel="Create category"
+          onSuccess={close}
+        />
+      )}
     </Modal>
   );
 }
