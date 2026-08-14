@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
+import { buildCategoryOptions } from "@/lib/categoryOptions";
 import { deleteBundle } from "@/actions/items";
-import { BundleForm } from "./_components/BundleForm";
+import { AddBundleButton } from "./_components/AddBundleButton";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -20,7 +21,7 @@ export default async function BundlesPage() {
   const supabase = await createClient();
   const permissions = await getPermissions();
 
-  const [{ data: bundles }, { data: plainItems }, { data: availability }] = await Promise.all([
+  const [{ data: bundles }, { data: plainItems }, { data: availability }, { data: categories }] = await Promise.all([
     supabase
       .from("items")
       .select(
@@ -31,6 +32,7 @@ export default async function BundlesPage() {
       .returns<BundleRow[]>(),
     supabase.from("items").select("id, sku, name").eq("is_bundle", false).order("name"),
     supabase.from("bundle_stock_levels").select("bundle_id, available"),
+    supabase.from("categories").select("id, name, parent_id").order("name"),
   ]);
 
   const availableByBundleId = new Map((availability ?? []).map((a) => [a.bundle_id, a.available]));
@@ -40,12 +42,17 @@ export default async function BundlesPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-medium text-on-surface">Bundles</h1>
-        <p className="text-sm text-on-surface-variant">
-          Packages of multiple items sold together at one price. Stock is
-          tracked on the constituent items, not the bundle itself.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-medium text-on-surface">Bundles</h1>
+          <p className="text-sm text-on-surface-variant">
+            Packages of multiple items sold together at one price. Stock is
+            tracked on the constituent items, not the bundle itself.
+          </p>
+        </div>
+        {canCreate && (
+          <AddBundleButton items={plainItems ?? []} categories={buildCategoryOptions(categories ?? [])} />
+        )}
       </div>
 
       <div className="space-y-4">
@@ -88,13 +95,6 @@ export default async function BundlesPage() {
           <p className="text-sm text-on-surface-variant">No bundles yet.</p>
         )}
       </div>
-
-      {canCreate && (
-        <Card className="max-w-xl">
-          <h2 className="mb-4 text-lg font-medium text-on-surface">New bundle</h2>
-          <BundleForm items={plainItems ?? []} />
-        </Card>
-      )}
     </div>
   );
 }

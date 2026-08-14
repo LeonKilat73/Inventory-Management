@@ -29,6 +29,7 @@ export function parseItemFormData(formData: FormData) {
 export const bundleSchema = z.object({
   sku: z.string().trim().min(1, "SKU is required").max(64),
   name: z.string().trim().min(1, "Name is required").max(200),
+  categoryId: z.string().uuid().optional().or(z.literal("")),
   bundlePrice: z.coerce.number().nonnegative(),
   itemIds: z.array(z.string().uuid()).min(1, "Pick at least one item"),
   quantities: z.array(z.coerce.number().int().positive()),
@@ -38,6 +39,7 @@ export function parseBundleFormData(formData: FormData) {
   return bundleSchema.safeParse({
     sku: formData.get("sku"),
     name: formData.get("name"),
+    categoryId: formData.get("categoryId") ?? "",
     bundlePrice: formData.get("bundlePrice") || undefined,
     itemIds: formData.getAll("itemId"),
     quantities: formData.getAll("quantity"),

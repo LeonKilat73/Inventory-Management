@@ -99,6 +99,7 @@ export async function createBundle(
 ): Promise<ActionState> {
   await requirePermission("bundles", "create");
 
+  const skuAuto = formData.get("skuAuto") === "true";
   const parsed = parseBundleFormData(formData);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -114,9 +115,18 @@ export async function createBundle(
 
   const supabase = await createClient();
 
+  let sku = v.sku;
+  if (skuAuto && v.categoryId) {
+    const { data: generated, error: skuError } = await supabase.rpc("fn_next_sku", {
+      p_category_id: v.categoryId,
+    });
+    if (skuError) return { error: skuError.message };
+    if (generated) sku = generated;
+  }
+
   const { data: bundleItemRow, error: itemError } = await supabase
     .from("items")
-    .insert({ sku: v.sku, name: v.name, unit_price: v.bundlePrice, is_bundle: true })
+    .insert({ sku, name: v.name, category_id: v.categoryId || null, unit_price: v.bundlePrice, is_bundle: true })
     .select("id")
     .single();
 

@@ -94,9 +94,14 @@ export async function updateCategory(
 
 // Read-only -- doesn't consume a number, just shows what the next one would
 // be. Composes the parent's prefix in for a brand sub-category, matching
-// what fn_next_sku actually generates at save time (see items.ts createItem).
-export async function previewNextSku(categoryId: string): Promise<string | null> {
-  await requirePermission("items", "view");
+// what fn_next_sku actually generates at save time (see items.ts
+// createItem/createBundle). `module` lets the bundle form check bundles:view
+// instead of items:view, since those are independent permissions.
+export async function previewNextSku(
+  categoryId: string,
+  module: "items" | "bundles" = "items",
+): Promise<string | null> {
+  await requirePermission(module, "view");
   if (!categoryId) return null;
 
   const supabase = await createClient();
