@@ -91,7 +91,13 @@ export function NotificationBell({ userId }: { userId: string }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-80 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-2 shadow-lg">
+        // left-0 (not right-0): the offset parent is a small wrapper right
+        // next to the bell, near the right edge of the 256px sidebar. A
+        // 320px-wide panel anchored via right-0 there computes a negative
+        // left position and overflows off the left edge of the viewport.
+        // Growing rightward from the button, into the main content area,
+        // keeps it fully on screen.
+        <div className="absolute left-0 top-10 z-50 w-80 rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-2 shadow-lg">
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 && (
               <p className="px-3 py-4 text-sm text-on-surface-variant">No notifications yet.</p>
