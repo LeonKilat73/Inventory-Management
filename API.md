@@ -23,7 +23,8 @@ hash — if you lose one, revoke it and create a new one.
 
 ### `GET /api/v1/items`
 
-List all active items with their current stock.
+List all active items with their current stock. Optional `?sku=` does an
+exact match and returns just that one item (still inside the `items` array).
 
 ```json
 {
@@ -40,6 +41,23 @@ List all active items with their current stock.
       "stock": 3,
       "reorderThreshold": 8
     }
+  ]
+}
+```
+
+For a bundle (`isBundle: true`), `stock` is the real sellable quantity
+(`min(constituent stock / quantity required)` across its parts, not a
+number stored on the bundle itself), and the item also carries its parts:
+
+```json
+{
+  "id": "uuid",
+  "sku": "BNDL-DCAM-MNT",
+  "isBundle": true,
+  "stock": 2,
+  "constituents": [
+    { "itemId": "uuid", "sku": "DCAM-2000", "name": "1080p Dual-Channel Dash Cam", "quantity": 1 },
+    { "itemId": "uuid", "sku": "MNT-5000", "name": "Windshield Suction Mount", "quantity": 1 }
   ]
 }
 ```
@@ -90,6 +108,41 @@ For `manual_adjustment`, also include `"direction": "increase" | "decrease"`.
 
 Responses: `201 { "ok": true }` on success, `400 { "error": "..." }` on
 validation failure or insufficient stock, `401`/`403` for auth problems.
+
+### `POST /api/v1/sales`
+
+Record a whole cart in one call (requires a read + write key) — the intended
+entry point for a POS checkout. `itemId` on a line may be a plain item **or
+a bundle**; a bundle line is expanded into one stock movement per
+constituent automatically. The whole cart is atomic: if any line would take
+an item negative, the entire call fails and **nothing** is recorded — a
+sale never half-applies.
+
+Request body:
+
+```json
+{
+  "lines": [
+    { "itemId": "uuid-of-a-plain-item", "quantity": 2 },
+    { "itemId": "uuid-of-a-bundle", "quantity": 1 }
+  ],
+  "externalReference": "uuid-of-your-own-order-id",
+  "note": "Register 1, cashier Jhon"
+}
+```
+
+`externalReference` is optional but recommended — it's stored on every
+resulting `stock_movements` row (`reference_table = "pos_sale"`,
+`reference_id = <externalReference>`) so a sale is traceable back to your
+own order record. It must be a UUID (e.g. your POS order's own id) — plain
+text order numbers aren't accepted here since it's stored in a `uuid`
+column, not a text one.
+
+Response: `201 { "ok": true, "movementIds": ["uuid", "uuid", ...] }` — one
+id per stock movement actually created (a bundle line produces several).
+`400 { "error": "..." }` names which item/bundle couldn't be sold and why
+(e.g. `"Only 1 of DCAM-2000 in stock -- can't sell 2 of bundle
+BNDL-DCAM-MNT."`), with no partial effect on stock.
 
 ## Webhooks
 
