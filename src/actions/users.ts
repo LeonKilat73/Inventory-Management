@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/requirePermission";
@@ -282,4 +283,37 @@ export async function sendPasswordResetEmail(
   });
 
   return { error: null, info: `Password reset email sent to ${profile.email}.` };
+}
+
+// True hard delete -- gated on its own "users:delete" permission, distinct
+// from "users:edit" (which covers deactivate/lock/reset), since this is
+// irreversible in a way those aren't. Only actually succeeds for an account
+// with no history: profiles.id is referenced (without cascade) by purchase
+// orders, stock movements, calendar events, expenses, defective reports,
+// API keys, audit log, and permission overrides they've granted -- Postgres
+// blocks the delete if any of those exist, which we surface as a plain
+// "deactivate instead" message rather than a raw FK error.
+export async function deleteUserAccount(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const actingUser = await requirePermission("users", "delete");
+
+  const userId = String(formData.get("userId") ?? "");
+  if (!userId) return { error: "Missing user id." };
+  if (userId === actingUser.id) {
+    return { error: "You cannot delete your own account. Ask another admin to do it." };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(userId);
+  if (error) {
+    return {
+      error:
+        "This account can't be deleted because it has activity on record (purchase orders, stock movements, audit history, etc.) that other data still depends on. Deactivate it instead to block access while keeping that history intact.",
+    };
+  }
+
+  revalidatePath("/admin/users");
+  redirect("/admin/users");
 }

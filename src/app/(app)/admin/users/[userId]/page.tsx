@@ -7,6 +7,7 @@ import { NotificationPreferencesForm } from "../_components/NotificationPreferen
 import { UsernameForm } from "../_components/UsernameForm";
 import { SecurityStatusCard } from "../_components/SecurityStatusCard";
 import { AccountActionsCard } from "../_components/AccountActionsCard";
+import { DeleteAccountButton } from "../_components/DeleteAccountButton";
 import { Card } from "@/components/ui/Card";
 import { BackLink } from "@/components/ui/BackLink";
 
@@ -65,6 +66,7 @@ export default async function ManageUserPage({
   }
 
   const canEdit = permissions.users?.edit === true;
+  const canDelete = permissions.users?.delete === true;
   const canEditPreferences = canEdit || isSelf;
   const canViewUsersList = permissions.users?.view === true;
 
@@ -105,6 +107,18 @@ export default async function ManageUserPage({
             isSuspended={profile.is_suspended}
             passwordResetRequired={profile.password_reset_required}
           />
+        </Card>
+      )}
+
+      {canDelete && !isSelf && (
+        <Card>
+          <h2 className="mb-1 text-lg font-medium text-on-surface">Danger zone</h2>
+          <p className="mb-3 text-sm text-on-surface-variant">
+            Only for accounts that were never really used — an employee who&apos;s left the company
+            with real activity on record should be deactivated above instead, so that history stays
+            intact.
+          </p>
+          <DeleteAccountButton userId={profile.id} fullName={profile.full_name} />
         </Card>
       )}
 
