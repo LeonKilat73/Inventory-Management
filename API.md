@@ -144,6 +144,23 @@ id per stock movement actually created (a bundle line produces several).
 (e.g. `"Only 1 of DCAM-2000 in stock -- can't sell 2 of bundle
 BNDL-DCAM-MNT."`), with no partial effect on stock.
 
+### `POST /api/v1/sales/:reference/void`
+
+Reverses a sale previously recorded via `POST /api/v1/sales`, identified by
+the same `externalReference` you sent then (requires a read + write key).
+Posts one offsetting `replacement_in` movement per original line — stock
+goes back up by exactly what the sale took out. Atomic, same as recording
+the sale in the first place.
+
+Whether the caller is *allowed* to void a given sale (e.g. a POS's own
+manager-approval step) is entirely up to the caller — this endpoint only
+checks that the API key has write access, same as every other write here.
+
+Response: `200 { "ok": true, "movementIds": [...] }`. `400 { "error": "..."
+}` if `:reference` isn't a UUID, if no sale is found for it, or if it's
+already been voided (voiding the same reference twice is rejected, not
+silently repeated).
+
 ## Webhooks
 
 `POST /api/v1/webhooks/notifications-dispatch` sends an email for a
