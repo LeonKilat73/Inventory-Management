@@ -52,7 +52,11 @@ export default async function ItemsPage() {
             <Link href="/items/bundles" className="text-primary underline underline-offset-2">
               Bundles
             </Link>{" "}
-            for packages made of multiple items.
+            for packages made of multiple items, or{" "}
+            <Link href="/items/categories" className="text-primary underline underline-offset-2">
+              Categories
+            </Link>{" "}
+            to manage SKU prefixes.
           </p>
         </div>
         {canCreate && <AddItemButton categories={categories ?? []} />}

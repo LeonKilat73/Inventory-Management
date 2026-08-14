@@ -14,6 +14,7 @@ export async function createItem(
 ): Promise<ActionState> {
   await requirePermission("items", "create");
 
+  const skuAuto = formData.get("skuAuto") === "true";
   const parsed = parseItemFormData(formData);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
@@ -21,8 +22,18 @@ export async function createItem(
   const v = parsed.data;
 
   const supabase = await createClient();
+
+  let sku = v.sku;
+  if (skuAuto && v.categoryId) {
+    const { data: generated, error: skuError } = await supabase.rpc("fn_next_sku", {
+      p_category_id: v.categoryId,
+    });
+    if (skuError) return { error: skuError.message };
+    if (generated) sku = generated;
+  }
+
   const { error } = await supabase.from("items").insert({
-    sku: v.sku,
+    sku,
     name: v.name,
     description: v.description || null,
     category_id: v.categoryId || null,
