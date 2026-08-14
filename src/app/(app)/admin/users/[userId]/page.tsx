@@ -4,6 +4,8 @@ import { getCurrentUser, getPermissions } from "@/lib/auth/permissions";
 import { RoleForm } from "../_components/RoleForm";
 import { OverrideGrid } from "../_components/OverrideGrid";
 import { NotificationPreferencesForm } from "../_components/NotificationPreferencesForm";
+import { UsernameForm } from "../_components/UsernameForm";
+import { SecurityStatusCard } from "../_components/SecurityStatusCard";
 import { Card } from "@/components/ui/Card";
 import { BackLink } from "@/components/ui/BackLink";
 
@@ -29,7 +31,13 @@ export default async function ManageUserPage({
 
   const [{ data: profile }, { data: roles }, { data: rolePermissions }, { data: overrideRows }, { data: notifPrefs }] =
     await Promise.all([
-      supabase.from("profiles").select("id, full_name, email, role_id").eq("id", userId).single(),
+      supabase
+        .from("profiles")
+        .select(
+          "id, full_name, email, role_id, username, failed_login_count, locked_until, is_suspended, password_reset_required",
+        )
+        .eq("id", userId)
+        .single(),
       supabase.from("roles").select("id, name").order("name"),
       supabase.from("role_permissions").select("role_id, module, action, allowed"),
       supabase.from("user_permission_overrides").select("module, action, allowed").eq("user_id", userId),
@@ -68,8 +76,31 @@ export default async function ManageUserPage({
 
       <div>
         <h1 className="text-2xl font-medium text-on-surface">{profile.full_name}</h1>
-        <p className="text-sm text-on-surface-variant">{profile.email}</p>
+        <p className="text-sm text-on-surface-variant">
+          {profile.email}
+          {profile.username && <> · @{profile.username}</>}
+        </p>
       </div>
+
+      {canEdit && (
+        <Card>
+          <h2 className="mb-3 text-lg font-medium text-on-surface">Sign-in security</h2>
+          <SecurityStatusCard
+            userId={profile.id}
+            failedLoginCount={profile.failed_login_count}
+            lockedUntil={profile.locked_until}
+            isSuspended={profile.is_suspended}
+            passwordResetRequired={profile.password_reset_required}
+          />
+        </Card>
+      )}
+
+      {canEdit && (
+        <Card className="max-w-sm">
+          <h2 className="mb-3 text-lg font-medium text-on-surface">Username</h2>
+          <UsernameForm userId={profile.id} username={profile.username} />
+        </Card>
+      )}
 
       {canEdit && (
         <Card>

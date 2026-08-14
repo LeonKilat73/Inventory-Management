@@ -10,6 +10,8 @@ type UserRow = {
   full_name: string;
   email: string;
   is_active: boolean;
+  is_suspended: boolean;
+  locked_until: string | null;
   roles: { name: string } | { name: string }[] | null;
 };
 
@@ -27,7 +29,7 @@ export default async function AdminUsersPage() {
   const [{ data: users }, { data: roles }] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, email, is_active, roles(name)")
+      .select("id, full_name, email, is_active, is_suspended, locked_until, roles(name)")
       .order("full_name")
       .returns<UserRow[]>(),
     supabase.from("roles").select("id, name").order("name"),
@@ -70,9 +72,15 @@ export default async function AdminUsersPage() {
                     <Badge tone="primary">{role?.name ?? "—"}</Badge>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge tone={u.is_active ? "tertiary" : "neutral"}>
-                      {u.is_active ? "Active" : "Inactive"}
-                    </Badge>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge tone={u.is_active ? "tertiary" : "neutral"}>
+                        {u.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                      {u.is_suspended && <Badge tone="error">Suspended</Badge>}
+                      {!u.is_suspended && u.locked_until && new Date(u.locked_until) > new Date() && (
+                        <Badge tone="error">Locked</Badge>
+                      )}
+                    </div>
                   </td>
                   {canEdit && (
                     <td className="px-4 py-3 text-right">

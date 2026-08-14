@@ -1,20 +1,19 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { MODULES, ACTIONS } from "@/lib/auth/types";
+import { getSiteOrigin } from "@/lib/getSiteOrigin";
 
 export type ActionState = { error: string | null };
 const ok: ActionState = { error: null };
 
-async function getSiteOrigin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
+const USERNAME_RE = /^[a-z0-9_.]{3,32}$/;
+
+function normalizeUsername(raw: FormDataEntryValue | null): string {
+  return String(raw ?? "").trim().toLowerCase();
 }
 
 // Admin-driven onboarding: creates the auth user and sends them an email to
@@ -31,9 +30,13 @@ export async function inviteUser(
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const roleId = String(formData.get("roleId") ?? "");
+  const username = normalizeUsername(formData.get("username"));
 
-  if (!fullName || !email || !roleId) {
-    return { error: "Name, email, and role are required." };
+  if (!fullName || !email || !roleId || !username) {
+    return { error: "Name, email, username, and role are required." };
+  }
+  if (!USERNAME_RE.test(username)) {
+    return { error: "Username must be 3-32 characters: lowercase letters, numbers, underscore, or period." };
   }
 
   const origin = await getSiteOrigin();
@@ -49,7 +52,7 @@ export async function inviteUser(
   const supabase = await createClient();
   const { error: roleError } = await supabase
     .from("profiles")
-    .update({ role_id: roleId })
+    .update({ role_id: roleId, username })
     .eq("id", data.user.id);
 
   if (roleError) return { error: roleError.message };
@@ -129,5 +132,69 @@ export async function updateUserOverrides(
   }
 
   revalidatePath(`/admin/users/${userId}`);
+  return ok;
+}
+
+export async function updateUsername(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requirePermission("users", "edit");
+
+  const userId = String(formData.get("userId") ?? "");
+  const username = normalizeUsername(formData.get("username"));
+  if (!userId) return { error: "Missing user id." };
+  if (!USERNAME_RE.test(username)) {
+    return { error: "Username must be 3-32 characters: lowercase letters, numbers, underscore, or period." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ username }).eq("id", userId);
+  if (error) {
+    return {
+      error: error.code === "23505" ? "That username is already taken." : error.message,
+    };
+  }
+
+  revalidatePath(`/admin/users/${userId}`);
+  return ok;
+}
+
+// Reactivates an account suspended by the failed-login lockout ladder (see
+// fn_register_failed_login). Requires the user to have already reset their
+// password -- enforced here at the app level, same convention as
+// updateUserRole's self-role-change check -- so "unsuspend" can't be used to
+// skip that step.
+export async function unsuspendUser(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requirePermission("users", "edit");
+
+  const userId = String(formData.get("userId") ?? "");
+  if (!userId) return { error: "Missing user id." };
+
+  const supabase = await createClient();
+  const { data: profile, error: fetchError } = await supabase
+    .from("profiles")
+    .select("is_suspended, password_reset_required")
+    .eq("id", userId)
+    .single();
+
+  if (fetchError) return { error: fetchError.message };
+  if (!profile.is_suspended) return { error: "This account isn't suspended." };
+  if (profile.password_reset_required) {
+    return { error: "This user must reset their password before you can reactivate their account." };
+  }
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ is_suspended: false, locked_until: null, failed_login_count: 0 })
+    .eq("id", userId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath("/admin/users");
   return ok;
 }

@@ -19,6 +19,14 @@ export function InviteUserForm({ roles }: { roles: Role[] }) {
         <TextField label="Email" name="email" type="email" required />
       </div>
 
+      <TextField
+        label="Username"
+        name="username"
+        pattern="[a-z0-9_.]{3,32}"
+        title="3-32 characters: lowercase letters, numbers, underscore, or period"
+        required
+      />
+
       <SelectField label="Role" name="roleId" required defaultValue="">
         <option value="" disabled>
           Select a role…
