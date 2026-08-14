@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AuthActionState = { error: string | null };
 
@@ -41,6 +42,17 @@ export async function signUp(
     return { error: "Password must be at least 8 characters." };
   }
 
+  // Public self-signup only exists to bootstrap the very first admin
+  // account (there's no admin yet to invite anyone). Once any account
+  // exists, this closes -- everyone else comes in through an admin invite
+  // (see src/actions/users.ts inviteUser), which is what actually enforces
+  // "admin controls who gets access."
+  const admin = createAdminClient();
+  const { count } = await admin.from("profiles").select("id", { count: "exact", head: true });
+  if (count && count > 0) {
+    return { error: "Self-signup is disabled. Ask an admin to invite you." };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email,
@@ -58,4 +70,23 @@ export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+// Lands here via /auth/callback after an invite (or, later, a
+// forgot-password) email link exchanges its code for a session -- the user
+// is already authenticated at this point, just needs to pick a password.
+export async function setNewPassword(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
+
+  redirect("/dashboard");
 }

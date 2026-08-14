@@ -2,11 +2,13 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database.types";
 
-// Paths that don't require a Supabase session cookie: /login itself, and
-// /api/* -- the external REST API (src/app/api/v1) authenticates via API
-// key (see src/lib/apiAuth.ts), not a browser session, so it must never be
-// redirected to /login.
-const SESSION_EXEMPT_PATHS = ["/login", "/reset-password", "/api"];
+// Paths that don't require a Supabase session cookie: /login itself, /api/*
+// (the external REST API in src/app/api/v1 authenticates via API key, see
+// src/lib/apiAuth.ts, never a browser session), and /auth/callback -- a user
+// clicking an invite/recovery email link has no session yet, so that route
+// must be reachable before the code-exchange sets one, or the redirect to
+// /login would fire first and the link would never work.
+const SESSION_EXEMPT_PATHS = ["/login", "/reset-password", "/api", "/auth/callback"];
 
 // Refreshes the Supabase auth session on every request and redirects
 // unauthenticated users to /login. This is the cheap, request-wide gate --

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
+import { InviteUserForm } from "./_components/InviteUserForm";
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 
 type UserRow = {
   id: string;
@@ -22,16 +24,20 @@ export default async function AdminUsersPage() {
   }
 
   const supabase = await createClient();
-  const { data: users } = await supabase
-    .from("profiles")
-    .select("id, full_name, email, is_active, roles(name)")
-    .order("full_name")
-    .returns<UserRow[]>();
+  const [{ data: users }, { data: roles }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, full_name, email, is_active, roles(name)")
+      .order("full_name")
+      .returns<UserRow[]>(),
+    supabase.from("roles").select("id, name").order("name"),
+  ]);
 
   const canEdit = permissions.users?.edit === true;
+  const canCreate = permissions.users?.create === true;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-medium text-on-surface">Users</h1>
         <p className="text-sm text-on-surface-variant">
@@ -84,6 +90,13 @@ export default async function AdminUsersPage() {
           </tbody>
         </table>
       </div>
+
+      {canCreate && (
+        <Card className="max-w-xl">
+          <h2 className="mb-4 text-lg font-medium text-on-surface">Invite a user</h2>
+          <InviteUserForm roles={roles ?? []} />
+        </Card>
+      )}
     </div>
   );
 }

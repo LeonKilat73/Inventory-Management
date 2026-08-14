@@ -1,12 +1,62 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { MODULES, ACTIONS } from "@/lib/auth/types";
 
 export type ActionState = { error: string | null };
 const ok: ActionState = { error: null };
+
+async function getSiteOrigin() {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "http";
+  return `${proto}://${host}`;
+}
+
+// Admin-driven onboarding: creates the auth user and sends them an email to
+// set their own password, rather than the admin choosing one. handle_new_user
+// bootstraps the profile with a default role first (staff, unless this
+// happens to be the very first user ever); we immediately overwrite that
+// with whatever role the admin picked in the form.
+export async function inviteUser(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requirePermission("users", "create");
+
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const roleId = String(formData.get("roleId") ?? "");
+
+  if (!fullName || !email || !roleId) {
+    return { error: "Name, email, and role are required." };
+  }
+
+  const origin = await getSiteOrigin();
+  const admin = createAdminClient();
+
+  const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
+    data: { full_name: fullName },
+    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+  });
+
+  if (error) return { error: error.message };
+
+  const supabase = await createClient();
+  const { error: roleError } = await supabase
+    .from("profiles")
+    .update({ role_id: roleId })
+    .eq("id", data.user.id);
+
+  if (roleError) return { error: roleError.message };
+
+  revalidatePath("/admin/users");
+  return ok;
+}
 
 export async function updateUserRole(
   _prevState: ActionState,
