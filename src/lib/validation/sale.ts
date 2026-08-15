@@ -15,3 +15,12 @@ export const saleSchema = z.object({
   externalReference: z.string().uuid("externalReference must be a UUID").optional(),
   note: z.string().trim().max(500).optional(),
 });
+
+// Backs POST /api/v1/sales/:reference/return -- returning specific line(s)
+// of a previously-recorded sale, by quantity. Same line shape as a sale
+// (itemId may be a plain item or a bundle), just without externalReference
+// since the reference comes from the URL instead.
+export const returnSchema = z.object({
+  lines: z.array(saleLineSchema).min(1, "At least one return line is required."),
+  note: z.string().trim().max(500).optional(),
+});

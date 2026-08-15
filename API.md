@@ -161,6 +161,33 @@ Response: `200 { "ok": true, "movementIds": [...] }`. `400 { "error": "..."
 already been voided (voiding the same reference twice is rejected, not
 silently repeated).
 
+### `POST /api/v1/sales/:reference/return`
+
+Reverses **specific line(s)** of a sale by quantity (requires a read + write
+key) — a partial return, unlike `/void` above which reverses the whole
+sale. Same reference as the original `POST /api/v1/sales` call.
+
+Request body:
+
+```json
+{
+  "lines": [{ "itemId": "uuid-of-a-plain-item-or-bundle", "quantity": 1 }],
+  "note": "Customer returned 1 unit, wrong color"
+}
+```
+
+A bundle line's return expands into its constituents the same way a bundle
+sale does. The endpoint tracks how much of each line has already been
+returned against this reference, so multiple partial returns against the
+same sale can't together exceed what was actually sold — attempting to
+over-return fails with a `400` naming how much is actually left. Returning
+against a sale that's already been fully voided also fails — void already
+reversed everything.
+
+Response: `200 { "ok": true, "movementIds": [...] }`. `400 { "error": "..."
+}` if `:reference` isn't a UUID, no sale is found, the sale was already
+voided, or a line would over-return.
+
 ## Webhooks
 
 `POST /api/v1/webhooks/notifications-dispatch` sends an email for a
