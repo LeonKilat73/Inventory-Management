@@ -10,9 +10,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const { id } = await params;
 
+  // See GET /api/v1/items for why unit_cost is deliberately never selected
+  // here -- this is the same customer-facing sale integration (POS).
   const { data: item, error } = await auth.supabase
     .from("items")
-    .select("id, sku, name, description, unit_price, unit_cost, is_bundle, is_active, reorder_threshold, categories(name)")
+    .select("id, sku, name, description, unit_price, is_bundle, is_active, reorder_threshold, categories(name)")
     .eq("id", id)
     .single();
 
@@ -45,7 +47,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     description: item.description,
     category: category?.name ?? null,
     unitPrice: item.unit_price,
-    unitCost: item.unit_cost,
     isBundle: item.is_bundle,
     isActive: item.is_active,
     stock,

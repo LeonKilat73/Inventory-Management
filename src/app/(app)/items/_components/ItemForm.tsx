@@ -129,7 +129,7 @@ export function ItemForm({
         defaultValue={defaults?.description ?? ""}
       />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className={`grid gap-4 ${isCreate ? "grid-cols-4" : "grid-cols-3"}`}>
         <TextField
           label="Unit cost"
           name="unitCost"
@@ -149,6 +149,15 @@ export function ItemForm({
           type="number"
           defaultValue={defaults?.reorder_quantity ?? undefined}
         />
+        {isCreate && (
+          <TextField
+            label="Initial quantity on hand"
+            name="initialQuantity"
+            type="number"
+            min={0}
+            defaultValue={0}
+          />
+        )}
       </div>
 
       {state.error && <p className="text-sm text-error">{state.error}</p>}

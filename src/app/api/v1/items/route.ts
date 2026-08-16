@@ -9,10 +9,17 @@ export async function GET(request: NextRequest) {
 
   const sku = request.nextUrl.searchParams.get("sku");
 
+  // Deliberately no unit_cost here -- this endpoint is what POS's catalog,
+  // checkout, and quote pages fetch and pass straight into client
+  // components, so anything selected here is visible in the browser's page
+  // payload/devtools even if the UI never renders it. Cost is margin data;
+  // it has no legitimate reason to leave the server on a customer-facing
+  // sale integration. If a future integration genuinely needs cost, give it
+  // its own scoped endpoint rather than adding the field back here.
   let query = auth.supabase
     .from("items")
     .select(
-      "id, sku, name, description, unit_price, unit_cost, is_bundle, is_active, reorder_threshold, categories(name)",
+      "id, sku, name, description, unit_price, is_bundle, is_active, reorder_threshold, categories(name)",
     )
     .eq("is_active", true)
     .order("name");
@@ -54,7 +61,6 @@ export async function GET(request: NextRequest) {
       description: item.description,
       category: category?.name ?? null,
       unitPrice: item.unit_price,
-      unitCost: item.unit_cost,
       isBundle: item.is_bundle,
       stock: item.is_bundle ? bundleStockById.get(item.id) ?? 0 : stockByItemId.get(item.id) ?? 0,
       reorderThreshold: item.reorder_threshold,

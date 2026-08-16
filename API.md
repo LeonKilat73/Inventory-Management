@@ -36,7 +36,6 @@ exact match and returns just that one item (still inside the `items` array).
       "description": "...",
       "category": "Dash Cams",
       "unitPrice": 69.99,
-      "unitCost": 32,
       "isBundle": false,
       "stock": 3,
       "reorderThreshold": 8
@@ -44,6 +43,10 @@ exact match and returns just that one item (still inside the `items` array).
   ]
 }
 ```
+
+`unitCost` (what the shop paid) is deliberately never included here — this
+endpoint is what a customer-facing POS reads, and cost has no business
+leaving the server on that path.
 
 For a bundle (`isBundle: true`), `stock` is the real sellable quantity
 (`min(constituent stock / quantity required)` across its parts, not a

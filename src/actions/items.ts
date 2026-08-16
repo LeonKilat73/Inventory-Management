@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { parseItemFormData, parseBundleFormData } from "@/lib/validation/item";
+import { recordStockMovement } from "@/lib/stock/ledger";
 
 export type ActionState = { error: string | null };
 const ok: ActionState = { error: null };
@@ -12,7 +13,7 @@ export async function createItem(
   _prevState: ActionState,
   formData: FormData,
 ): Promise<ActionState> {
-  await requirePermission("items", "create");
+  const user = await requirePermission("items", "create");
 
   const skuAuto = formData.get("skuAuto") === "true";
   const parsed = parseItemFormData(formData);
@@ -32,18 +33,46 @@ export async function createItem(
     if (generated) sku = generated;
   }
 
-  const { error } = await supabase.from("items").insert({
-    sku,
-    name: v.name,
-    description: v.description || null,
-    category_id: v.categoryId || null,
-    unit_cost: v.unitCost ?? null,
-    unit_price: v.unitPrice ?? null,
-    reorder_threshold: v.reorderThreshold,
-    reorder_quantity: v.reorderQuantity ?? null,
-  });
+  const { data: newItem, error } = await supabase
+    .from("items")
+    .insert({
+      sku,
+      name: v.name,
+      description: v.description || null,
+      category_id: v.categoryId || null,
+      unit_cost: v.unitCost ?? null,
+      unit_price: v.unitPrice ?? null,
+      reorder_threshold: v.reorderThreshold,
+      reorder_quantity: v.reorderQuantity ?? null,
+    })
+    .select("id")
+    .single();
 
   if (error) return { error: error.message };
+
+  // An item has no quantity column of its own -- stock is always derived
+  // from stock_movements (see ledger.ts), so seeding "how many do I have"
+  // means posting one opening movement, same mechanism QuickAdjustStockForm
+  // uses once the item already exists. Best-effort: the item itself is
+  // already created and committed by this point, so a failure here surfaces
+  // as its own message rather than rolling back the whole item.
+  if (v.initialQuantity && v.initialQuantity > 0) {
+    try {
+      await recordStockMovement(supabase, {
+        itemId: newItem.id,
+        movementType: "manual_adjustment",
+        direction: "increase",
+        quantity: v.initialQuantity,
+        note: "Initial stock on hand",
+        createdBy: user.id,
+      });
+    } catch (err) {
+      return {
+        error: `Item was created, but recording its starting quantity failed: ${err instanceof Error ? err.message : "unknown error"}. Use "Adjust" on the item's page to add it manually.`,
+      };
+    }
+  }
+
   revalidatePath("/items");
   return ok;
 }

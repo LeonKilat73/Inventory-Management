@@ -9,6 +9,9 @@ export const itemSchema = z.object({
   unitPrice: z.coerce.number().nonnegative().optional(),
   reorderThreshold: z.coerce.number().int().nonnegative().default(0),
   reorderQuantity: z.coerce.number().int().nonnegative().optional(),
+  // Only meaningful on create -- updateItem ignores it (stock is adjusted
+  // separately via QuickAdjustStockForm once an item already exists).
+  initialQuantity: z.coerce.number().int().nonnegative().optional(),
 });
 
 export type ItemInput = z.infer<typeof itemSchema>;
@@ -23,6 +26,7 @@ export function parseItemFormData(formData: FormData) {
     unitPrice: formData.get("unitPrice") || undefined,
     reorderThreshold: formData.get("reorderThreshold") || 0,
     reorderQuantity: formData.get("reorderQuantity") || undefined,
+    initialQuantity: formData.get("initialQuantity") || undefined,
   });
 }
 
