@@ -151,7 +151,7 @@ export function ItemForm({
         />
         {isCreate && (
           <TextField
-            label="Initial quantity on hand"
+            label="Qty on hand"
             name="initialQuantity"
             type="number"
             min={0}
