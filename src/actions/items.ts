@@ -83,14 +83,54 @@ export async function updateItem(
   return ok;
 }
 
-export async function deleteItem(id: string) {
+// True hard delete -- only actually succeeds for an item with no history.
+// item_id is referenced (without cascade) by stock_movements (append-only,
+// no delete path of its own), purchase_order_lines, bundle_items, and
+// defective_items, so Postgres blocks the delete (23503) the moment an item
+// has ever been received, sold, adjusted, or put in a bundle. Surfaced as a
+// plain "deactivate instead" message rather than the raw FK error, same
+// pattern as deleteUserAccount in actions/users.ts.
+export async function deleteItem(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   await requirePermission("items", "delete");
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Missing item id." };
 
   const supabase = await createClient();
   const { error } = await supabase.from("items").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.code === "23503") {
+      return {
+        error:
+          "This item can't be deleted because it has activity on record (stock movements, purchase orders, bundles, etc.) that other data still depends on. Deactivate it instead to hide it from the catalog while keeping that history intact.",
+      };
+    }
+    return { error: error.message };
+  }
 
   revalidatePath("/items");
+  return ok;
+}
+
+// Deactivate/reactivate -- the everyday way to retire an item (test items,
+// discontinued products) without losing its stock history. Already honored
+// elsewhere (dashboard low-stock query, external GET /api/v1/items both
+// filter on is_active) -- this is what actually drives that flag from the
+// Items screen itself.
+export async function setItemActive(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  await requirePermission("items", "edit");
+
+  const id = String(formData.get("id") ?? "");
+  const active = formData.get("active") === "true";
+  if (!id) return { error: "Missing item id." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("items").update({ is_active: active }).eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/items");
+  revalidatePath("/items/bundles");
+  return ok;
 }
 
 export async function createBundle(
@@ -154,13 +194,45 @@ export async function createBundle(
   return ok;
 }
 
-export async function deleteBundle(id: string) {
+// Same shape as deleteItem -- bundles -> items cascade delete removes the
+// bundle_items rows too, but the bundle's own item_id can still be blocked
+// by purchase_order_lines/stock_movements/defective_items if it was ever
+// sold or adjusted directly.
+export async function deleteBundle(_prevState: ActionState, formData: FormData): Promise<ActionState> {
   await requirePermission("bundles", "delete");
 
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Missing bundle id." };
+
   const supabase = await createClient();
-  // bundles -> items cascade delete removes the bundle_items rows too.
   const { error } = await supabase.from("items").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.code === "23503") {
+      return {
+        error:
+          "This bundle can't be deleted because it has activity on record (sales, stock movements, etc.). Deactivate it instead to hide it from the catalog while keeping that history intact.",
+      };
+    }
+    return { error: error.message };
+  }
 
   revalidatePath("/items/bundles");
+  return ok;
+}
+
+// Deactivate/reactivate for a bundle -- same is_active flag and same
+// downstream effect (dashboard, external API) as setItemActive above.
+export async function setBundleActive(_prevState: ActionState, formData: FormData): Promise<ActionState> {
+  await requirePermission("bundles", "edit");
+
+  const id = String(formData.get("id") ?? "");
+  const active = formData.get("active") === "true";
+  if (!id) return { error: "Missing bundle id." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("items").update({ is_active: active }).eq("id", id);
+  if (error) return { error: error.message };
+
+  revalidatePath("/items/bundles");
+  return ok;
 }

@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { deleteItem } from "@/actions/items";
 import { Badge } from "@/components/ui/Badge";
+import { ItemRowActions } from "./ItemRowActions";
 
 export type ItemRow = {
   id: string;
@@ -14,6 +13,7 @@ export type ItemRow = {
   reorderThreshold: number;
   unitCost: number | null;
   unitPrice: number | null;
+  isActive: boolean;
 };
 
 export function ItemsTable({
@@ -29,15 +29,17 @@ export function ItemsTable({
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
+  const [showInactive, setShowInactive] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return items.filter((item) => {
       const matchesQuery = !q || item.sku.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
       const matchesCategory = !category || item.categoryName === category;
-      return matchesQuery && matchesCategory;
+      const matchesActive = showInactive || item.isActive;
+      return matchesQuery && matchesCategory && matchesActive;
     });
-  }, [items, query, category]);
+  }, [items, query, category, showInactive]);
 
   return (
     <div className="space-y-3">
@@ -72,6 +74,14 @@ export function ItemsTable({
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-2 text-sm text-on-surface-variant">
+          <input
+            type="checkbox"
+            checked={showInactive}
+            onChange={(e) => setShowInactive(e.target.checked)}
+          />
+          Show deactivated
+        </label>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
@@ -96,7 +106,12 @@ export function ItemsTable({
                   className="border-t border-outline-variant/60 bg-surface-container-lowest hover:bg-surface-container-low"
                 >
                   <td className="px-4 py-3 font-mono text-xs">{item.sku}</td>
-                  <td className="px-4 py-3">{item.name}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span>{item.name}</span>
+                      {!item.isActive && <Badge tone="neutral">Deactivated</Badge>}
+                    </div>
+                  </td>
                   <td className="px-4 py-3 text-on-surface-variant">{item.categoryName ?? "—"}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -108,23 +123,12 @@ export function ItemsTable({
                   <td className="px-4 py-3">{item.unitPrice != null ? `$${item.unitPrice}` : "—"}</td>
                   {(canEdit || canDelete) && (
                     <td className="px-4 py-3 text-right">
-                      <div className="flex justify-end gap-4">
-                        {canEdit && (
-                          <Link
-                            href={`/items/${item.id}`}
-                            className="text-primary underline underline-offset-2"
-                          >
-                            Edit
-                          </Link>
-                        )}
-                        {canDelete && (
-                          <form action={deleteItem.bind(null, item.id)}>
-                            <button type="submit" className="text-error underline underline-offset-2">
-                              Delete
-                            </button>
-                          </form>
-                        )}
-                      </div>
+                      <ItemRowActions
+                        itemId={item.id}
+                        isActive={item.isActive}
+                        canEdit={canEdit}
+                        canDelete={canDelete}
+                      />
                     </td>
                   )}
                 </tr>

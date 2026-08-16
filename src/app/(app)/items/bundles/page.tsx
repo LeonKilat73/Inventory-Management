@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
 import { buildCategoryOptions } from "@/lib/categoryOptions";
-import { deleteBundle } from "@/actions/items";
 import { AddBundleButton } from "./_components/AddBundleButton";
+import { BundleActions } from "./_components/BundleActions";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -11,6 +11,7 @@ type BundleRow = {
   sku: string;
   name: string;
   unit_price: number | null;
+  is_active: boolean;
   bundles: {
     bundle_price: number;
     bundle_items: { quantity: number; items: { sku: string; name: string } }[];
@@ -25,7 +26,7 @@ export default async function BundlesPage() {
     supabase
       .from("items")
       .select(
-        "id, sku, name, unit_price, bundles(bundle_price, bundle_items(quantity, items(sku, name)))",
+        "id, sku, name, unit_price, is_active, bundles(bundle_price, bundle_items(quantity, items(sku, name)))",
       )
       .eq("is_bundle", true)
       .order("name")
@@ -60,7 +61,10 @@ export default async function BundlesPage() {
           <Card key={bundle.id}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-medium text-on-surface">{bundle.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-on-surface">{bundle.name}</p>
+                  {!bundle.is_active && <Badge tone="neutral">Deactivated</Badge>}
+                </div>
                 <p className="font-mono text-xs text-on-surface-variant">{bundle.sku}</p>
                 <Badge tone="secondary" className="mt-2">
                   {availableByBundleId.get(bundle.id) ?? 0} available
@@ -70,16 +74,7 @@ export default async function BundlesPage() {
                 <p className="font-medium text-on-surface">
                   ${bundle.bundles?.bundle_price ?? bundle.unit_price}
                 </p>
-                {canDelete && (
-                  <form action={deleteBundle.bind(null, bundle.id)}>
-                    <button
-                      type="submit"
-                      className="text-sm text-error underline underline-offset-2"
-                    >
-                      Delete
-                    </button>
-                  </form>
-                )}
+                <BundleActions bundleId={bundle.id} isActive={bundle.is_active} canDelete={canDelete} />
               </div>
             </div>
             <ul className="mt-3 space-y-1 text-sm text-on-surface-variant">
