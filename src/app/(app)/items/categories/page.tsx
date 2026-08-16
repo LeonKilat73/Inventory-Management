@@ -81,7 +81,9 @@ export default async function CategoriesPage() {
                       key={child.id}
                       className="border-t border-outline-variant/60 bg-surface-container-lowest hover:bg-surface-container-low"
                     >
-                      <td className="px-4 py-3 pl-10 text-on-surface-variant">↳ {child.name}</td>
+                      <td className="px-4 py-3 pl-10 text-on-surface-variant">
+                        {category.name}: {child.name}
+                      </td>
                       <td className="px-4 py-3 font-mono text-xs">{child.sku_prefix ?? "—"}</td>
                       <td className="px-4 py-3 text-on-surface-variant">
                         {nextSkuPreview(child.sku_prefix, child.sku_next_number, category.sku_prefix)}

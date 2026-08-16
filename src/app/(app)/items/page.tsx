@@ -13,7 +13,7 @@ export default async function ItemsPage() {
     supabase
       .from("items")
       .select(
-        "id, sku, name, unit_price, unit_cost, reorder_threshold, is_active, categories(name)",
+        "id, sku, name, unit_price, unit_cost, reorder_threshold, is_active, categories(name, parent:parent_id(name))",
       )
       .eq("is_bundle", false)
       .order("name"),
@@ -29,11 +29,13 @@ export default async function ItemsPage() {
 
   const rows: ItemRow[] = (items ?? []).map((item) => {
     const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
+    const parent = category ? (Array.isArray(category.parent) ? category.parent[0] : category.parent) : null;
+    const categoryName = category ? (parent ? `${parent.name}: ${category.name}` : category.name) : null;
     return {
       id: item.id,
       sku: item.sku,
       name: item.name,
-      categoryName: category?.name ?? null,
+      categoryName,
       stock: stockByItemId.get(item.id) ?? 0,
       reorderThreshold: item.reorder_threshold,
       unitCost: item.unit_cost,
