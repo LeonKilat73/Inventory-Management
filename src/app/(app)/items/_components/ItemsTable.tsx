@@ -34,7 +34,11 @@ export function ItemsTable({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return items.filter((item) => {
-      const matchesQuery = !q || item.sku.toLowerCase().includes(q) || item.name.toLowerCase().includes(q);
+      const matchesQuery =
+        !q ||
+        item.sku.toLowerCase().includes(q) ||
+        item.name.toLowerCase().includes(q) ||
+        (item.categoryName?.toLowerCase().includes(q) ?? false);
       const matchesCategory = !category || item.categoryName === category;
       const matchesActive = showInactive || item.isActive;
       return matchesQuery && matchesCategory && matchesActive;
@@ -58,7 +62,7 @@ export function ItemsTable({
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by SKU or name…"
+            placeholder="Search by SKU, name, or category…"
             className="w-full rounded-md border border-outline bg-surface py-2.5 pl-9 pr-4 text-sm text-on-surface outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
