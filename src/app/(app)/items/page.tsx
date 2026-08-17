@@ -13,7 +13,7 @@ export default async function ItemsPage() {
     supabase
       .from("items")
       .select(
-        "id, sku, name, unit_price, unit_cost, reorder_threshold, is_active, categories(name, parent:parent_id(name))",
+        "id, sku, name, description, unit_price, unit_cost, reorder_threshold, is_active, categories(name, parent:parent_id(name))",
       )
       .eq("is_bundle", false)
       .order("name"),
@@ -35,6 +35,7 @@ export default async function ItemsPage() {
       id: item.id,
       sku: item.sku,
       name: item.name,
+      description: item.description,
       categoryName,
       stock: stockByItemId.get(item.id) ?? 0,
       reorderThreshold: item.reorder_threshold,

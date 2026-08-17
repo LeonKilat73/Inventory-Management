@@ -8,6 +8,7 @@ export type ItemRow = {
   id: string;
   sku: string;
   name: string;
+  description: string | null;
   categoryName: string | null;
   stock: number;
   reorderThreshold: number;
@@ -30,6 +31,7 @@ export function ItemsTable({
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [showInactive, setShowInactive] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -115,6 +117,20 @@ export function ItemsTable({
                       <span>{item.name}</span>
                       {!item.isActive && <Badge tone="neutral">Deactivated</Badge>}
                     </div>
+                    {item.description && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setExpanded(expanded === item.id ? null : item.id)}
+                          className="mt-1 block text-xs text-on-surface-variant underline underline-offset-2"
+                        >
+                          {expanded === item.id ? "Hide details" : "Details"}
+                        </button>
+                        {expanded === item.id && (
+                          <p className="mt-1 max-w-xs text-xs text-on-surface-variant">{item.description}</p>
+                        )}
+                      </>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant">{item.categoryName ?? "—"}</td>
                   <td className="px-4 py-3">
