@@ -34,7 +34,7 @@ export default async function AppLayout({
   );
 
   return (
-    <div className="flex flex-1">
+    <div className="flex flex-1 flex-col md:flex-row">
       <IdleSessionGuard />
       <AppSidebar
         navItems={visibleNavItems}
@@ -42,7 +42,7 @@ export default async function AppLayout({
         roleName={user.roleName}
         userId={user.id}
       />
-      <main className="flex-1 overflow-y-auto p-8">{children}</main>
+      <main className="flex-1 overflow-y-auto p-4 md:p-8">{children}</main>
     </div>
   );
 }

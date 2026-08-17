@@ -88,14 +88,14 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {canViewItems && <StatCard label="Items needing reorder" value={lowStockItems.length} href="/items" />}
         {canViewPO && <StatCard label="Purchase orders awaiting action" value={poCountRes.count ?? 0} href="/purchase-orders" />}
         {canViewDefective && <StatCard label="Pending defective reports" value={defectiveRes.count ?? 0} href="/stock/defective" />}
         {canViewExpenses && <StatCard label="Expenses this month" value={`₱${expensesThisMonth.toFixed(2)}`} href="/expenses" />}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {canViewItems && (
           <Card>
             <h2 className="mb-3 font-medium text-on-surface">Low stock</h2>

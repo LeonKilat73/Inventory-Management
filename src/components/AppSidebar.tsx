@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "@/actions/auth";
@@ -122,58 +123,111 @@ export function AppSidebar({
   userId: string;
 }) {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Navigating closes the mobile drawer -- otherwise it'd stay open,
+  // covering the page just navigated to. Adjusted during render (React's
+  // recommended pattern for this, not a useEffect, which would cause an
+  // extra cascading render).
+  const [lastPathname, setLastPathname] = useState(pathname);
+  if (pathname !== lastPathname) {
+    setLastPathname(pathname);
+    setMobileOpen(false);
+  }
 
   return (
-    <aside className="flex w-64 flex-col bg-sidebar">
-      <div className="px-6 py-5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="truncate text-base font-medium text-white">Inventory</p>
-            <p className="truncate text-xs text-sidebar-foreground-muted">Car accessories</p>
-          </div>
-          <div className="min-w-0 text-right">
-            <p className="truncate text-sm font-medium text-white">{fullName}</p>
-            <div className="flex items-center justify-end gap-1 text-xs text-sidebar-foreground-muted">
-              <span className="min-w-0 truncate capitalize">{roleName}</span>
-              <span className="shrink-0">·</span>
-              <form action={signOut} className="shrink-0">
-                <button
-                  type="submit"
-                  className="shrink-0 text-primary underline underline-offset-2 hover:text-white"
-                >
-                  Sign out
-                </button>
-              </form>
+    <>
+      {/* Mobile-only top bar -- below md the full sidebar becomes a
+          slide-in drawer instead of a permanently-visible 256px column,
+          which would eat most of a phone screen. */}
+      <div className="flex items-center justify-between bg-sidebar px-4 py-3 md:hidden">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Open menu"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-white hover:bg-sidebar-hover"
+        >
+          <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.8" stroke="currentColor" className="h-5 w-5">
+            <path d="M3 5h14M3 10h14M3 15h14" strokeLinecap="round" />
+          </svg>
+        </button>
+        <p className="text-base font-medium text-white">Inventory</p>
+        <div className="w-9" aria-hidden="true" />
+      </div>
+
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 flex-col bg-sidebar md:static md:z-auto md:flex ${
+          mobileOpen ? "flex" : "hidden"
+        }`}
+      >
+        <div className="px-6 py-5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-base font-medium text-white">Inventory</p>
+              <p className="truncate text-xs text-sidebar-foreground-muted">Car accessories</p>
+            </div>
+            <div className="min-w-0 text-right">
+              <p className="truncate text-sm font-medium text-white">{fullName}</p>
+              <div className="flex items-center justify-end gap-1 text-xs text-sidebar-foreground-muted">
+                <span className="min-w-0 truncate capitalize">{roleName}</span>
+                <span className="shrink-0">·</span>
+                <form action={signOut} className="shrink-0">
+                  <button
+                    type="submit"
+                    className="shrink-0 text-primary underline underline-offset-2 hover:text-white"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="mt-2 flex items-center justify-end gap-1">
-          <ThemeToggle className="text-sidebar-foreground hover:bg-sidebar-hover" />
-          <NotificationBell userId={userId} />
-        </div>
-      </div>
-      <nav className="flex-1 space-y-1 px-3">
-        {navItems.map((item) => {
-          const active =
-            item.href === "/dashboard"
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
-                active
-                  ? "bg-sidebar-active text-sidebar-active-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-hover"
-              }`}
+          <div className="mt-2 flex items-center justify-end gap-1">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-sidebar-foreground hover:bg-sidebar-hover md:hidden"
             >
-              <span className="h-4 w-4 shrink-0">{icons[item.icon]}</span>
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
+              <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.8" stroke="currentColor" className="h-4 w-4">
+                <path d="M5 5l10 10M15 5 5 15" strokeLinecap="round" />
+              </svg>
+            </button>
+            <ThemeToggle className="text-sidebar-foreground hover:bg-sidebar-hover" />
+            <NotificationBell userId={userId} />
+          </div>
+        </div>
+        <nav className="flex-1 space-y-1 px-3">
+          {navItems.map((item) => {
+            const active =
+              item.href === "/dashboard"
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-3 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+                  active
+                    ? "bg-sidebar-active text-sidebar-active-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-hover"
+                }`}
+              >
+                <span className="h-4 w-4 shrink-0">{icons[item.icon]}</span>
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }
