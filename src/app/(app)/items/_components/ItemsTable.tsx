@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { ItemRowActions } from "./ItemRowActions";
 
+const PAGE_SIZE = 25;
+
 export type ItemRow = {
   id: string;
   sku: string;
@@ -32,6 +34,7 @@ export function ItemsTable({
   const [category, setCategory] = useState("");
   const [showInactive, setShowInactive] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -46,6 +49,20 @@ export function ItemsTable({
       return matchesQuery && matchesCategory && matchesActive;
     });
   }, [items, query, category, showInactive]);
+
+  // A new search/filter should always start back at page 1 -- adjusted
+  // during render (React's recommended pattern for this, not an effect)
+  // rather than a useEffect, which would cause an extra cascading render.
+  const filterKey = `${query}|${category}|${showInactive}`;
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
+  if (filterKey !== lastFilterKey) {
+    setLastFilterKey(filterKey);
+    setPage(1);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   return (
     <div className="space-y-3">
@@ -90,9 +107,9 @@ export function ItemsTable({
         </label>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
+      <div className="max-h-[640px] overflow-y-auto rounded-2xl border border-outline-variant/60">
         <table className="w-full text-sm">
-          <thead className="bg-surface-container-high text-left text-on-surface-variant">
+          <thead className="sticky top-0 z-10 bg-surface-container-high text-left text-on-surface-variant">
             <tr>
               <th className="px-4 py-3 font-medium">SKU</th>
               <th className="px-4 py-3 font-medium">Name</th>
@@ -104,7 +121,7 @@ export function ItemsTable({
             </tr>
           </thead>
           <tbody>
-            {filtered.map((item) => {
+            {pageItems.map((item) => {
               const lowStock = item.stock <= item.reorderThreshold;
               return (
                 <tr
@@ -165,10 +182,44 @@ export function ItemsTable({
         </table>
       </div>
 
-      {items.length > 0 && (
-        <p className="text-xs text-on-surface-variant">
-          Showing {filtered.length} of {items.length} items
-        </p>
+      {filtered.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-on-surface-variant">
+            Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filtered.length)} of{" "}
+            {filtered.length} items
+          </p>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={safePage === 1}
+                className="rounded-md border border-outline px-3 py-1.5 text-sm text-on-surface disabled:opacity-40 disabled:pointer-events-none hover:bg-surface-container-high"
+              >
+                Previous
+              </button>
+              <select
+                value={safePage}
+                onChange={(e) => setPage(Number(e.target.value))}
+                className="rounded-md border border-outline bg-surface px-3 py-1.5 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              >
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                  <option key={n} value={n}>
+                    Page {n} of {totalPages}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safePage === totalPages}
+                className="rounded-md border border-outline px-3 py-1.5 text-sm text-on-surface disabled:opacity-40 disabled:pointer-events-none hover:bg-surface-container-high"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
