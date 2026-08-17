@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database.types";
+import { asSessionCookie } from "./sessionCookie";
 
 // Paths that don't require a Supabase session cookie: /login itself, /api/*
 // (the external REST API in src/app/api/v1 authenticates via API key, see
@@ -31,7 +32,8 @@ export async function updateSession(request: NextRequest) {
           );
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            // Session cookie, not persistent -- see sessionCookie.ts.
+            supabaseResponse.cookies.set(name, value, asSessionCookie(options)),
           );
         },
       },

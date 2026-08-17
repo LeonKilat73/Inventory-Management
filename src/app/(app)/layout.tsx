@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser, getPermissions } from "@/lib/auth/permissions";
 import { AppSidebar, type NavIcon } from "@/components/AppSidebar";
+import { IdleSessionGuard } from "@/components/IdleSessionGuard";
 import type { Module } from "@/lib/auth/types";
 
 const NAV_ITEMS: { href: string; label: string; module: Module | null; icon: NavIcon }[] = [
@@ -34,6 +35,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex flex-1">
+      <IdleSessionGuard />
       <AppSidebar
         navItems={visibleNavItems}
         fullName={user.fullName}

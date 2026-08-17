@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database.types";
+import { asSessionCookie } from "./sessionCookie";
 
 // One per request -- create a fresh client, don't cache/reuse across requests.
 export async function createClient() {
@@ -17,7 +18,7 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, asSessionCookie(options)),
             );
           } catch {
             // Called from a Server Component -- proxy.ts refreshes the
