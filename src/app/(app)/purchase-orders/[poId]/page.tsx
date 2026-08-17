@@ -127,7 +127,7 @@ export default async function PurchaseOrderDetailPage({
                   </td>
                   <td className="px-4 py-3">{line.quantity_ordered}</td>
                   <td className="px-4 py-3">{line.quantity_received}</td>
-                  <td className="px-4 py-3">${line.unit_cost}</td>
+                  <td className="px-4 py-3">₱{line.unit_cost}</td>
                   {canReceiveNow && (
                     <td className="px-4 py-3">
                       {remaining > 0 ? (

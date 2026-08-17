@@ -74,7 +74,7 @@ export default async function ExpensesPage() {
           <Card key={r.label}>
             <p className="text-sm text-on-surface-variant">{r.label}</p>
             <p className="mt-1 text-2xl font-medium text-on-surface">
-              ${r.total.toFixed(2)}
+              ₱{r.total.toFixed(2)}
             </p>
           </Card>
         ))}
@@ -102,7 +102,7 @@ export default async function ExpensesPage() {
                 </td>
                 <td className="px-4 py-3 text-on-surface-variant">{e.category ?? "—"}</td>
                 <td className="px-4 py-3 text-on-surface-variant">{e.description ?? "—"}</td>
-                <td className="px-4 py-3 font-medium text-on-surface">${Number(e.amount).toFixed(2)}</td>
+                <td className="px-4 py-3 font-medium text-on-surface">₱{Number(e.amount).toFixed(2)}</td>
               </tr>
             ))}
             {!rows.length && (

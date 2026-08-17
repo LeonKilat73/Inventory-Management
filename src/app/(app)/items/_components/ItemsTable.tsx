@@ -139,8 +139,8 @@ export function ItemsTable({
                       {lowStock && <Badge tone="error">Reorder</Badge>}
                     </div>
                   </td>
-                  <td className="px-4 py-3">{item.unitCost != null ? `$${item.unitCost}` : "—"}</td>
-                  <td className="px-4 py-3">{item.unitPrice != null ? `$${item.unitPrice}` : "—"}</td>
+                  <td className="px-4 py-3">{item.unitCost != null ? `₱${item.unitCost}` : "—"}</td>
+                  <td className="px-4 py-3">{item.unitPrice != null ? `₱${item.unitPrice}` : "—"}</td>
                   {(canEdit || canDelete) && (
                     <td className="px-4 py-3 text-right">
                       <ItemRowActions

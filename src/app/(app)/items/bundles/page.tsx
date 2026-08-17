@@ -72,7 +72,7 @@ export default async function BundlesPage() {
               </div>
               <div className="flex items-center gap-4">
                 <p className="font-medium text-on-surface">
-                  ${bundle.bundles?.bundle_price ?? bundle.unit_price}
+                  ₱{bundle.bundles?.bundle_price ?? bundle.unit_price}
                 </p>
                 <BundleActions bundleId={bundle.id} isActive={bundle.is_active} canDelete={canDelete} />
               </div>
