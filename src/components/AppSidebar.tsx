@@ -125,14 +125,28 @@ export function AppSidebar({
 
   return (
     <aside className="flex w-64 flex-col bg-sidebar">
-      <div className="flex items-start justify-between px-6 py-5">
-        <div>
-          <p className="text-base font-medium text-white">Inventory</p>
-          <p className="text-xs text-sidebar-foreground-muted">Car accessories</p>
+      <div className="px-6 py-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-base font-medium text-white">Inventory</p>
+            <p className="text-xs text-sidebar-foreground-muted">Car accessories</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <ThemeToggle className="text-sidebar-foreground hover:bg-sidebar-hover" />
+            <NotificationBell userId={userId} />
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <ThemeToggle className="text-sidebar-foreground hover:bg-sidebar-hover" />
-          <NotificationBell userId={userId} />
+        <div className="mt-4 rounded-2xl bg-sidebar-hover px-4 py-3 text-right text-xs">
+          <p className="truncate text-sm font-medium text-white">{fullName}</p>
+          <p className="truncate capitalize text-sidebar-foreground-muted">{roleName}</p>
+          <form action={signOut} className="mt-2">
+            <button
+              type="submit"
+              className="text-primary underline underline-offset-2 hover:text-white"
+            >
+              Sign out
+            </button>
+          </form>
         </div>
       </div>
       <nav className="flex-1 space-y-1 px-3">
@@ -157,18 +171,6 @@ export function AppSidebar({
           );
         })}
       </nav>
-      <div className="mx-3 mb-4 mt-4 rounded-2xl bg-sidebar-hover px-4 py-3 text-xs">
-        <p className="truncate text-sm font-medium text-white">{fullName}</p>
-        <p className="truncate capitalize text-sidebar-foreground-muted">{roleName}</p>
-        <form action={signOut} className="mt-2">
-          <button
-            type="submit"
-            className="text-primary underline underline-offset-2 hover:text-white"
-          >
-            Sign out
-          </button>
-        </form>
-      </div>
     </aside>
   );
 }
