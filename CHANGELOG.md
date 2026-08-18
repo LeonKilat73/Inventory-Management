@@ -16,3 +16,7 @@
 
 ### Fixed
 - Logins and password resets were showing up as "System" in the Logs page instead of the actual staff member's name, because that write path couldn't identify who it was. Now correctly attributed to the real user.
+
+### New: Reports & reorder suggestions
+- Added a Reports page: best-sellers and slow-movers, computed from actual recorded sales, with a week/month/quarter/year/all-time selector. Shows units sold and estimated revenue per item.
+- Added a Reorder Suggestions page: every item at or below its reorder threshold, grouped by whichever supplier it was last ordered from, with suggested quantities and costs pre-filled — review and click to create a draft purchase order instead of rebuilding it by hand. Linked from the Dashboard's low-stock card and the Purchase Orders page.
