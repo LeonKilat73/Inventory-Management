@@ -17,6 +17,7 @@ export type NavIcon =
   | "defective"
   | "calendar"
   | "expenses"
+  | "reports"
   | "users"
   | "roles"
   | "auditLog"
@@ -95,6 +96,12 @@ const icons: Record<NavIcon, React.ReactNode> = {
     <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
       <circle cx="10" cy="10" r="7.3" />
       <path d="M10 5.8v8.4M12.5 7.8c0-1-1.1-1.8-2.5-1.8s-2.4.8-2.4 1.8.9 1.4 2.4 1.7c1.6.3 2.5.8 2.5 1.9s-1.1 1.8-2.5 1.8-2.5-.6-2.5-1.7" strokeLinecap="round" />
+    </svg>
+  ),
+  reports: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <path d="M3 16.5V3M3 16.5h14" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6 13.5v-4M10 13.5v-7M14 13.5v-2.5" strokeLinecap="round" />
     </svg>
   ),
   auditLog: (

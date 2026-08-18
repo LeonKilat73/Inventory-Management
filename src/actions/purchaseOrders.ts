@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { parsePurchaseOrderFormData, receiveLineSchema } from "@/lib/validation/purchaseOrder";
 
-export type ActionState = { error: string | null };
+export type ActionState = { error: string | null; poId?: string };
 const ok: ActionState = { error: null };
 
 export async function createPurchaseOrder(
@@ -59,7 +59,7 @@ export async function createPurchaseOrder(
   if (linesError) return { error: linesError.message };
 
   revalidatePath("/purchase-orders");
-  return ok;
+  return { error: null, poId: po.id };
 }
 
 export async function submitPurchaseOrder(id: string) {

@@ -11,6 +11,7 @@ const NAV_ITEMS: { href: string; label: string; module: Module | null; icon: Nav
   { href: "/suppliers", label: "Suppliers", module: "suppliers", icon: "suppliers" },
   { href: "/purchase-orders", label: "Purchase Orders", module: "purchase_orders", icon: "purchaseOrders" },
   { href: "/stock/movements", label: "Stock Movements", module: "stock_movements", icon: "stock" },
+  { href: "/reports", label: "Reports", module: "stock_movements", icon: "reports" },
   { href: "/stock/defective", label: "Defective Items", module: "defective_items", icon: "defective" },
   { href: "/calendar", label: "Calendar", module: "calendar", icon: "calendar" },
   { href: "/expenses", label: "Expenses", module: "expenses", icon: "expenses" },

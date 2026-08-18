@@ -89,7 +89,9 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {canViewItems && <StatCard label="Items needing reorder" value={lowStockItems.length} href="/items" />}
+        {canViewItems && (
+          <StatCard label="Items needing reorder" value={lowStockItems.length} href="/purchase-orders/reorder" />
+        )}
         {canViewPO && <StatCard label="Purchase orders awaiting action" value={poCountRes.count ?? 0} href="/purchase-orders" />}
         {canViewDefective && <StatCard label="Pending defective reports" value={defectiveRes.count ?? 0} href="/stock/defective" />}
         {canViewExpenses && <StatCard label="Expenses this month" value={`₱${expensesThisMonth.toFixed(2)}`} href="/expenses" />}
@@ -110,6 +112,14 @@ export default async function DashboardPage() {
               ))}
               {!lowStockItems.length && <p className="text-sm text-on-surface-variant">All stocked up.</p>}
             </div>
+            {!!lowStockItems.length && (
+              <Link
+                href="/purchase-orders/reorder"
+                className="mt-3 inline-block text-sm text-primary underline underline-offset-2"
+              >
+                Review & reorder →
+              </Link>
+            )}
           </Card>
         )}
 

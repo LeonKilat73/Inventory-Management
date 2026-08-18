@@ -40,11 +40,21 @@ export default async function PurchaseOrdersPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-medium text-on-surface">Purchase Orders</h1>
-        <p className="text-sm text-on-surface-variant">
-          Order stock from suppliers. Receiving a PO automatically increases item stock.
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-medium text-on-surface">Purchase Orders</h1>
+          <p className="text-sm text-on-surface-variant">
+            Order stock from suppliers. Receiving a PO automatically increases item stock.
+          </p>
+        </div>
+        {permissions.purchase_orders?.create === true && (
+          <Link
+            href="/purchase-orders/reorder"
+            className="shrink-0 text-sm text-primary underline underline-offset-2"
+          >
+            Reorder low stock →
+          </Link>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
