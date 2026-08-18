@@ -84,11 +84,11 @@ export async function login(
   }
 
   // Successful sign-in clears the slate, including any residual count left
-  // over from a prior temporary lock.
-  await admin
-    .from("profiles")
-    .update({ failed_login_count: 0, locked_until: null })
-    .eq("id", profile.id);
+  // over from a prior temporary lock. Routed through fn_reset_login_lockout
+  // (not a plain .update()) so the audit log attributes this to the user
+  // who just signed in instead of "System" -- see that function's migration
+  // for why the service-role client is needed here at all.
+  await admin.rpc("fn_reset_login_lockout", { p_user_id: profile.id });
 
   redirect(redirectTo);
 }
@@ -166,7 +166,10 @@ export async function signUp(
   }
 
   if (data.user) {
-    const { error: usernameError } = await admin
+    // Uses the authenticated client (not admin) -- they're signed in as
+    // themselves at this point and username isn't a guarded field, so this
+    // gets correctly attributed in the audit log instead of showing "System".
+    const { error: usernameError } = await supabase
       .from("profiles")
       .update({ username })
       .eq("id", data.user.id);
@@ -208,7 +211,7 @@ export async function setNewPassword(
   // unsuspendUser) -- resetting the password alone doesn't let them back in.
   if (data.user) {
     const admin = createAdminClient();
-    await admin.from("profiles").update({ password_reset_required: false }).eq("id", data.user.id);
+    await admin.rpc("fn_clear_password_reset_required", { p_user_id: data.user.id });
   }
 
   redirect("/dashboard");

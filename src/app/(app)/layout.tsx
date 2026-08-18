@@ -16,7 +16,7 @@ const NAV_ITEMS: { href: string; label: string; module: Module | null; icon: Nav
   { href: "/expenses", label: "Expenses", module: "expenses", icon: "expenses" },
   { href: "/admin/users", label: "Users", module: "users", icon: "users" },
   { href: "/admin/roles", label: "Roles", module: "roles", icon: "roles" },
-  { href: "/audit-log", label: "Audit Log", module: "audit_log", icon: "auditLog" },
+  { href: "/audit-log", label: "Logs", module: "audit_log", icon: "auditLog" },
   { href: "/admin/api-keys", label: "API Keys", module: "api_keys", icon: "apiKeys" },
 ];
 

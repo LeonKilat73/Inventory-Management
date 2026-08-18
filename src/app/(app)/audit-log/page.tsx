@@ -67,7 +67,7 @@ export default async function AuditLogPage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-medium text-on-surface">Audit Log</h1>
+        <h1 className="text-2xl font-medium text-on-surface">Logs</h1>
         <p className="text-sm text-on-surface-variant">
           Every insert, update, and delete captured across the system, most recent first.
         </p>
