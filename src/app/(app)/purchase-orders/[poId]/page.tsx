@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
 import { submitPurchaseOrder } from "@/actions/purchaseOrders";
 import { ReceiveLineForm } from "../_components/ReceiveLineForm";
+import { ScanToReceive } from "../_components/ScanToReceive";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -101,6 +102,21 @@ export default async function PurchaseOrderDetailPage({
           </form>
         )}
       </Card>
+
+      {canReceiveNow && (
+        <ScanToReceive
+          poId={po.id}
+          lines={(lines ?? []).map((line) => {
+            const item = Array.isArray(line.items) ? line.items[0] : line.items;
+            return {
+              id: line.id,
+              sku: item?.sku ?? "",
+              name: item?.name ?? "",
+              remaining: line.quantity_ordered - line.quantity_received,
+            };
+          })}
+        />
+      )}
 
       <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
         <table className="w-full text-sm">
