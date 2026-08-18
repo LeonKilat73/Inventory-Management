@@ -79,7 +79,7 @@ export function ItemForm({
       {defaults?.id && <input type="hidden" name="id" value={defaults.id} />}
       {isCreate && <input type="hidden" name="skuAuto" value={skuAuto ? "true" : "false"} />}
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <TextField
             label="SKU"
@@ -100,7 +100,7 @@ export function ItemForm({
         <TextField label="Name" name="name" defaultValue={defaults?.name} required />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SelectField
           label="Category"
           name="categoryId"
@@ -129,7 +129,7 @@ export function ItemForm({
         defaultValue={defaults?.description ?? ""}
       />
 
-      <div className={`grid gap-4 ${isCreate ? "grid-cols-4" : "grid-cols-3"}`}>
+      <div className={`grid grid-cols-2 gap-4 ${isCreate ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
         <TextField
           label="Unit cost"
           name="unitCost"

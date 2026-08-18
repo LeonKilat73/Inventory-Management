@@ -40,7 +40,7 @@ export default async function PurchaseOrdersPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-medium text-on-surface">Purchase Orders</h1>
           <p className="text-sm text-on-surface-variant">
@@ -57,7 +57,7 @@ export default async function PurchaseOrdersPage() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
+      <div className="hidden overflow-hidden rounded-2xl border border-outline-variant/60 md:block">
         <table className="w-full text-sm">
           <thead className="bg-surface-container-high text-left text-on-surface-variant">
             <tr>
@@ -104,6 +104,32 @@ export default async function PurchaseOrdersPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {orders?.map((po) => {
+          const supplier = Array.isArray(po.suppliers) ? po.suppliers[0] : po.suppliers;
+          return (
+            <Link
+              key={po.id}
+              href={`/purchase-orders/${po.id}`}
+              className="block rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-4"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-mono text-xs text-on-surface-variant">{po.po_number}</p>
+                <Badge tone={STATUS_TONE[po.status]}>{po.status.replace("_", " ")}</Badge>
+              </div>
+              <p className="mt-1 font-medium text-on-surface">{supplier?.name ?? "—"}</p>
+              <div className="mt-2 flex gap-4 text-xs text-on-surface-variant">
+                <span>Ordered {po.ordered_at ?? "—"}</span>
+                <span>Expected {po.expected_at ?? "—"}</span>
+              </div>
+            </Link>
+          );
+        })}
+        {!orders?.length && (
+          <p className="text-center text-sm text-on-surface-variant">No purchase orders yet.</p>
+        )}
       </div>
 
       {canCreate && (

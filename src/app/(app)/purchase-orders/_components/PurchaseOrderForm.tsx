@@ -22,7 +22,7 @@ export function PurchaseOrderForm({
 
   return (
     <form action={formAction} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <SelectField label="Supplier" name="supplierId" required>
           <option value="">Select a supplier…</option>
           {suppliers.map((s) => (
@@ -34,24 +34,22 @@ export function PurchaseOrderForm({
         <TextField label="PO number" name="poNumber" placeholder="PO-1001" required />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextField label="Expected delivery date" name="expectedAt" type="date" />
       </div>
 
       <TextAreaField label="Notes" name="notes" />
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         <span className="block text-sm font-medium text-on-surface-variant">
           Line items
         </span>
-        <div className="grid grid-cols-[1fr_100px_120px] gap-3 text-xs font-medium text-on-surface-variant">
-          <span>Item</span>
-          <span>Quantity</span>
-          <span>Unit cost</span>
-        </div>
         {Array.from({ length: rowCount }).map((_, i) => (
-          <div key={i} className="grid grid-cols-[1fr_100px_120px] gap-3">
-            <SelectField label="" name="itemId" required>
+          <div
+            key={i}
+            className="grid grid-cols-1 gap-3 border-b border-outline-variant/60 pb-3 last:border-0 last:pb-0 sm:grid-cols-[1fr_100px_120px] sm:border-0 sm:pb-0"
+          >
+            <SelectField label="Item" name="itemId" required>
               <option value="">Select an item…</option>
               {items.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -59,8 +57,8 @@ export function PurchaseOrderForm({
                 </option>
               ))}
             </SelectField>
-            <TextField label="" name="quantity" type="number" min={1} defaultValue={1} required />
-            <TextField label="" name="unitCost" type="number" step="0.01" min={0} required />
+            <TextField label="Quantity" name="quantity" type="number" min={1} defaultValue={1} required />
+            <TextField label="Unit cost" name="unitCost" type="number" step="0.01" min={0} required />
           </div>
         ))}
         <button

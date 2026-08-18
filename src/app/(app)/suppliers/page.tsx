@@ -28,7 +28,7 @@ export default async function SuppliersPage() {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
+      <div className="hidden overflow-hidden rounded-2xl border border-outline-variant/60 md:block">
         <table className="w-full text-sm">
           <thead className="bg-surface-container-high text-left text-on-surface-variant">
             <tr>
@@ -90,6 +90,39 @@ export default async function SuppliersPage() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {suppliers?.map((s) => (
+          <div key={s.id} className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-4">
+            <div className="flex items-start justify-between gap-3">
+              <p className="font-medium text-on-surface">{s.name}</p>
+              <Badge tone={s.is_active ? "tertiary" : "neutral"}>{s.is_active ? "Active" : "Inactive"}</Badge>
+            </div>
+            <div className="mt-2 space-y-0.5 text-sm text-on-surface-variant">
+              {s.contact_name && <p>{s.contact_name}</p>}
+              {s.email && <p>{s.email}</p>}
+              {s.phone && <p>{s.phone}</p>}
+            </div>
+            {(canEdit || canDelete) && (
+              <div className="mt-3 flex gap-4 text-sm">
+                {canEdit && (
+                  <Link href={`/suppliers/${s.id}`} className="text-primary underline underline-offset-2">
+                    Edit
+                  </Link>
+                )}
+                {canDelete && (
+                  <form action={deleteSupplier.bind(null, s.id)}>
+                    <button type="submit" className="text-error underline underline-offset-2">
+                      Delete
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+        {!suppliers?.length && <p className="text-center text-sm text-on-surface-variant">No suppliers yet.</p>}
       </div>
 
       {canCreate && (

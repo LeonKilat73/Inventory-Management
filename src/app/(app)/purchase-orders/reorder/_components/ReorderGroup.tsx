@@ -82,43 +82,58 @@ export function ReorderGroup({
         )}
         <TextField label="PO number" name="poNumber" defaultValue={defaultPoNumber} required />
 
-        <div className="grid grid-cols-[1fr_70px_80px_100px] gap-3 text-xs font-medium text-on-surface-variant">
+        <div className="hidden grid-cols-[1fr_70px_80px_100px] gap-3 text-xs font-medium text-on-surface-variant sm:grid">
           <span>Item</span>
           <span>Stock</span>
           <span>Qty</span>
           <span>Unit cost</span>
         </div>
         {lines.map((line) => (
-          <div key={line.itemId} className="grid grid-cols-[1fr_70px_80px_100px] items-center gap-3 text-sm">
-            <div className="min-w-0">
+          <div
+            key={line.itemId}
+            className="grid grid-cols-2 items-center gap-x-3 gap-y-2 border-b border-outline-variant/60 pb-3 text-sm last:border-0 last:pb-0 sm:grid-cols-[1fr_70px_80px_100px] sm:border-0 sm:pb-0"
+          >
+            <div className="col-span-2 min-w-0 sm:col-span-1">
               <p className="truncate text-on-surface">{line.name}</p>
-              <p className="font-mono text-xs text-on-surface-variant">{line.sku}</p>
+              <p className="font-mono text-xs text-on-surface-variant">
+                {line.sku}
+                <span className="sm:hidden">
+                  {" "}
+                  · Stock {line.stock}/{line.reorderThreshold}
+                </span>
+              </p>
             </div>
-            <span className="text-xs text-on-surface-variant">
+            <span className="hidden text-xs text-on-surface-variant sm:block">
               {line.stock}/{line.reorderThreshold}
             </span>
             <input type="hidden" name="itemId" value={line.itemId} />
-            <input
-              type="number"
-              name="quantity"
-              min={1}
-              value={quantities[line.itemId]}
-              onChange={(e) =>
-                setQuantities((q) => ({ ...q, [line.itemId]: Number(e.target.value) }))
-              }
-              className="w-full rounded-md border border-outline bg-surface px-2 py-1.5 text-sm text-on-surface"
-            />
-            <input
-              type="number"
-              name="unitCost"
-              min={0}
-              step="0.01"
-              value={unitCosts[line.itemId]}
-              onChange={(e) =>
-                setUnitCosts((u) => ({ ...u, [line.itemId]: Number(e.target.value) }))
-              }
-              className="w-full rounded-md border border-outline bg-surface px-2 py-1.5 text-sm text-on-surface"
-            />
+            <label className="block">
+              <span className="mb-1 block text-xs text-on-surface-variant sm:hidden">Qty</span>
+              <input
+                type="number"
+                name="quantity"
+                min={1}
+                value={quantities[line.itemId]}
+                onChange={(e) =>
+                  setQuantities((q) => ({ ...q, [line.itemId]: Number(e.target.value) }))
+                }
+                className="w-full rounded-md border border-outline bg-surface px-2 py-1.5 text-sm text-on-surface"
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-on-surface-variant sm:hidden">Unit cost</span>
+              <input
+                type="number"
+                name="unitCost"
+                min={0}
+                step="0.01"
+                value={unitCosts[line.itemId]}
+                onChange={(e) =>
+                  setUnitCosts((u) => ({ ...u, [line.itemId]: Number(e.target.value) }))
+                }
+                className="w-full rounded-md border border-outline bg-surface px-2 py-1.5 text-sm text-on-surface"
+              />
+            </label>
           </div>
         ))}
 

@@ -107,7 +107,7 @@ export function ItemsTable({
         </label>
       </div>
 
-      <div className="max-h-[640px] overflow-y-auto rounded-2xl border border-outline-variant/60">
+      <div className="hidden max-h-[640px] overflow-y-auto rounded-2xl border border-outline-variant/60 md:block">
         <table className="w-full text-sm">
           <thead className="sticky top-0 z-10 bg-surface-container-high text-left text-on-surface-variant">
             <tr>
@@ -180,6 +180,56 @@ export function ItemsTable({
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="max-h-[640px] space-y-3 overflow-y-auto md:hidden">
+        {pageItems.map((item) => {
+          const lowStock = item.stock <= item.reorderThreshold;
+          return (
+            <div key={item.id} className="rounded-2xl border border-outline-variant/60 bg-surface-container-lowest p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-on-surface">{item.name}</p>
+                  <p className="font-mono text-xs text-on-surface-variant">{item.sku}</p>
+                </div>
+                {!item.isActive && <Badge tone="neutral">Deactivated</Badge>}
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-on-surface-variant">
+                {item.categoryName && <span>{item.categoryName}</span>}
+                <span className="flex items-center gap-1.5">
+                  Stock: {item.stock}
+                  {lowStock && <Badge tone="error">Reorder</Badge>}
+                </span>
+                <span>Cost: {item.unitCost != null ? `₱${item.unitCost}` : "—"}</span>
+                <span>Price: {item.unitPrice != null ? `₱${item.unitPrice}` : "—"}</span>
+              </div>
+              {item.description && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setExpanded(expanded === item.id ? null : item.id)}
+                    className="mt-2 block text-xs text-on-surface-variant underline underline-offset-2"
+                  >
+                    {expanded === item.id ? "Hide details" : "Details"}
+                  </button>
+                  {expanded === item.id && (
+                    <p className="mt-1 text-xs text-on-surface-variant">{item.description}</p>
+                  )}
+                </>
+              )}
+              {(canEdit || canDelete) && (
+                <div className="mt-3">
+                  <ItemRowActions itemId={item.id} isActive={item.isActive} canEdit={canEdit} canDelete={canDelete} />
+                </div>
+              )}
+            </div>
+          );
+        })}
+        {!filtered.length && (
+          <p className="text-center text-sm text-on-surface-variant">
+            {items.length ? "No items match your search." : "No items yet."}
+          </p>
+        )}
       </div>
 
       {filtered.length > 0 && (
