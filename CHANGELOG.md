@@ -26,3 +26,6 @@
 
 ### New: Mobile support for Items, Purchase Orders, and Suppliers
 - These three pages now show a proper stacked card list on phones instead of a cramped scrolling table — same data and actions, just comfortable to use on a phone. Their forms (add/edit item, add/edit supplier, new purchase order, reorder suggestions) now stack cleanly on narrow screens instead of squeezing fields side by side.
+
+### New: Supplier performance tracking
+- Each supplier's page now shows orders placed, average lead time, on-time delivery rate, and a recent price-paid-per-item history so a creeping price on a repeat order actually gets noticed instead of blending into the PO list.
