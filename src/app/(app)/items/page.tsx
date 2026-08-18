@@ -64,7 +64,12 @@ export default async function ItemsPage() {
             to manage SKU prefixes.
           </p>
         </div>
-        {canCreate && <AddItemButton categories={buildCategoryOptions(categories ?? [])} />}
+        <div className="flex shrink-0 items-center gap-3">
+          <a href="/api/export/items" className="text-sm text-primary underline underline-offset-2">
+            Export CSV
+          </a>
+          {canCreate && <AddItemButton categories={buildCategoryOptions(categories ?? [])} />}
+        </div>
       </div>
 
       <ItemsTable items={rows} categoryNames={categoryNames} canEdit={canEdit} canDelete={canDelete} />

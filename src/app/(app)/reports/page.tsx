@@ -94,11 +94,19 @@ export default async function ReportsPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-medium text-on-surface">Reports</h1>
-        <p className="text-sm text-on-surface-variant">
-          What&apos;s actually moving, and what&apos;s sitting on the shelf.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-medium text-on-surface">Reports</h1>
+          <p className="text-sm text-on-surface-variant">
+            What&apos;s actually moving, and what&apos;s sitting on the shelf.
+          </p>
+        </div>
+        <a
+          href={`/api/export/reports?period=${period}`}
+          className="shrink-0 text-sm text-primary underline underline-offset-2"
+        >
+          Export CSV
+        </a>
       </div>
 
       <div className="flex flex-wrap gap-2">

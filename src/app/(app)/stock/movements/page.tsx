@@ -39,12 +39,20 @@ export default async function StockMovementsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-medium text-on-surface">Stock Movements</h1>
-        <p className="text-sm text-on-surface-variant">
-          Every change to stock, in order. Current stock for any item is the sum
-          of this ledger — nothing is ever edited or deleted here.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-medium text-on-surface">Stock Movements</h1>
+          <p className="text-sm text-on-surface-variant">
+            Every change to stock, in order. Current stock for any item is the sum
+            of this ledger — nothing is ever edited or deleted here.
+          </p>
+        </div>
+        <a
+          href="/api/export/stock-movements"
+          className="shrink-0 text-sm text-primary underline underline-offset-2"
+        >
+          Export CSV
+        </a>
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-outline-variant/60">
