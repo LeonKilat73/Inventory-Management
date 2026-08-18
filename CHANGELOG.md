@@ -29,3 +29,6 @@
 
 ### New: Supplier performance tracking
 - Each supplier's page now shows orders placed, average lead time, on-time delivery rate, and a recent price-paid-per-item history so a creeping price on a repeat order actually gets noticed instead of blending into the PO list.
+
+### New: Barcode scanner support
+- Works with any USB or Bluetooth barcode scanner set up as a keyboard (no camera, no app pairing) — scan a SKU into the new field on a purchase order to receive one unit per scan, into the Stock Movements form to select the item, or into the Items search box to look it up.
