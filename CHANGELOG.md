@@ -23,3 +23,6 @@
 
 ### New: CSV export
 - Added "Export CSV" on the Items page (full catalog, not just the current page of results), Stock Movements page (the full ledger, not just the 100 most recent), and the Reports page (matches whichever period is selected). Opens cleanly in Excel, including the ₱ symbol.
+
+### New: Mobile support for Items, Purchase Orders, and Suppliers
+- These three pages now show a proper stacked card list on phones instead of a cramped scrolling table — same data and actions, just comfortable to use on a phone. Their forms (add/edit item, add/edit supplier, new purchase order, reorder suggestions) now stack cleanly on narrow screens instead of squeezing fields side by side.
