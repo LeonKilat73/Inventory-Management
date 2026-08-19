@@ -9,6 +9,9 @@
 ### New: Bundle sale customization (for POS)
 - The sales API now accepts an actual-parts-used list for a bundle line, instead of always applying the bundle's fixed recipe — lets POS's checkout support skipping or swapping individual bundle parts per sale. Also fixes a related bug: returning/refunding a bundle sale that had a part skipped would have failed outright (tried to restock something that was never taken), since returns always re-derived from the recipe too.
 
+### New: QuickBooks catalog import
+- Imported 441 new items from a QuickBooks Product/Service export, sorted into existing or new categories following the same SKU-prefix pattern the catalog already uses, with opening stock recorded from QuickBooks' on-hand quantities. 386 of those have no price yet (QuickBooks never had one) and are flagged for follow-up. 58 rows that were already in the catalog under a different name were matched and skipped rather than duplicated. QuickBooks entries that were really internal fees/labor/subscriptions, not products, or genuine service line items, were deliberately left out — reviewed with you before import, not auto-decided.
+
 ## 2026-08-18
 
 ### Display & UX
