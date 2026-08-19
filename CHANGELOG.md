@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-08-19
+
+### Fixed
+- "Forgot password?" failed with a PKCE "code verifier not found" error whenever the reset link was opened on a different browser or device than the one that requested it (the normal case). Same root cause and fix as POS's equivalent bug from the night before, just not caught here yet since this app's reset flow predates that session.
+
 ## 2026-08-18
 
 ### Display & UX
