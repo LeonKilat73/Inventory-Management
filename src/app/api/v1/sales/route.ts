@@ -22,7 +22,11 @@ export async function POST(request: NextRequest) {
     : `via API key ${auth.apiKeyId}`;
 
   const { data, error } = await auth.supabase.rpc("fn_record_pos_sale", {
-    p_lines: parsed.data.lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity })),
+    p_lines: parsed.data.lines.map((line) => ({
+      itemId: line.itemId,
+      quantity: line.quantity,
+      constituents: line.constituents ?? null,
+    })),
     p_reference: parsed.data.externalReference ?? null,
     p_note: note,
   });

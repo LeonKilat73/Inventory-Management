@@ -5,9 +5,24 @@ import { z } from "zod";
 // stock_movements row per constituent). externalReference is stored as
 // stock_movements.reference_id (uuid), so it's expected to be the POS's own
 // order id, not an arbitrary string.
+//
+// constituents is optional and only meaningful when itemId is a bundle: the
+// caller (POS) can override the bundle's own bundle_items recipe with
+// exactly what was actually used for this specific sale (a part skipped, or
+// swapped for a different item) -- quantity is still per-one-bundle-unit,
+// scaled by the line's own quantity same as the recipe would be. Omitted ->
+// fn_record_pos_sale falls back to the recipe, unchanged from before.
 export const saleLineSchema = z.object({
   itemId: z.string().uuid("Each line needs a valid item id"),
   quantity: z.coerce.number().int().positive("Each line quantity must be positive"),
+  constituents: z
+    .array(
+      z.object({
+        itemId: z.string().uuid("Each constituent needs a valid item id"),
+        quantity: z.coerce.number().int().positive("Each constituent quantity must be positive"),
+      }),
+    )
+    .optional(),
 });
 
 export const saleSchema = z.object({

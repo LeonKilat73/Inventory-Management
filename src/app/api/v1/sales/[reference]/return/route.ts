@@ -30,7 +30,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { data, error } = await auth.supabase.rpc("fn_partial_return_pos_sale", {
     p_reference: parsedReference.data,
-    p_lines: parsedBody.data.lines.map((line) => ({ itemId: line.itemId, quantity: line.quantity })),
+    p_lines: parsedBody.data.lines.map((line) => ({
+      itemId: line.itemId,
+      quantity: line.quantity,
+      constituents: line.constituents ?? null,
+    })),
     p_note: parsedBody.data.note ?? null,
   });
 
