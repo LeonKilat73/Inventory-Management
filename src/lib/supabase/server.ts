@@ -11,6 +11,21 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      // @supabase/ssr defaults to PKCE, which ties an email link to a
+      // verifier cookie stored in whichever browser *requested* it -- fine
+      // for OAuth (same tab, same browser, immediate redirect), but breaks
+      // password reset: someone routinely requests a reset on one device and
+      // opens the email on another (or a different browser/app entirely),
+      // and PKCE has no way to validate that. This app has no OAuth sign-in
+      // (email/username + password only), so implicit is the correct flow
+      // type throughout -- it makes every email link (reset, invite
+      // acceptance) a self-contained token that doesn't depend on where
+      // it's opened. Confirmed as the real cause of a live "PKCE code
+      // verifier not found" failure on /reset-password: the emailed link's
+      // token carried an explicit "pkce_" prefix.
+      auth: {
+        flowType: "implicit",
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();
