@@ -38,7 +38,8 @@ export async function GET(request: NextRequest) {
   let tokens;
   try {
     tokens = await exchangeCodeForTokens(code);
-  } catch {
+  } catch (err) {
+    console.error("QuickBooks token exchange failed:", err instanceof Error ? err.message : err);
     return redirectWithStatus(request, "token_exchange_failed");
   }
 
@@ -48,13 +49,18 @@ export async function GET(request: NextRequest) {
       `https://quickbooks.api.intuit.com/v3/company/${realmId}/companyinfo/${realmId}`,
       { headers: { Authorization: `Bearer ${tokens.access_token}`, Accept: "application/json" } },
     );
+    const bodyText = await res.text();
     if (res.ok) {
-      const json = await res.json();
+      const json = JSON.parse(bodyText);
       companyName = json?.CompanyInfo?.CompanyName ?? null;
+      if (companyName === null) {
+        console.error("QuickBooks CompanyInfo call succeeded but had no CompanyName. Body:", bodyText);
+      }
+    } else {
+      console.error(`QuickBooks CompanyInfo call failed (${res.status}). Body:`, bodyText);
     }
-  } catch {
-    // Non-fatal -- the token exchange already succeeded, so the connection
-    // is real even if this one display-only call happened to fail.
+  } catch (err) {
+    console.error("QuickBooks CompanyInfo call threw:", err instanceof Error ? err.message : err);
   }
   if (companyName === null) {
     return redirectWithStatus(request, "verification_failed");
