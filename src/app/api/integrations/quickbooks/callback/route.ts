@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
         console.error("QuickBooks CompanyInfo call succeeded but had no CompanyName. Body:", bodyText);
       }
     } else {
-      console.error(`QuickBooks CompanyInfo call failed (${res.status}). Body:`, bodyText);
+      console.error(`QuickBooks CompanyInfo call failed (${res.status}) for realmId ${realmId}. Body:`, bodyText);
     }
   } catch (err) {
     console.error("QuickBooks CompanyInfo call threw:", err instanceof Error ? err.message : err);
