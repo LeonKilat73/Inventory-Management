@@ -1,7 +1,13 @@
 import { getPermissions } from "@/lib/auth/permissions";
 import { getQuickbooksConnectionStatus, disconnectQuickbooks } from "@/actions/quickbooks";
+import { getPendingChanges } from "@/actions/quickbooksSync";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { PendingChangesList, SyncNowButton } from "./_components/SyncControls";
+
+// Matches the cron route's maxDuration -- the "Run sync now" button on this
+// page invokes runSyncNow(), which can take a while on a full catalog sync.
+export const maxDuration = 60;
 
 const STATUS_MESSAGES: Record<string, { tone: "error" | "primary"; text: string }> = {
   declined: { tone: "error", text: "The QuickBooks connection was declined." },
@@ -31,15 +37,17 @@ export default async function QuickbooksPage({
   const connection = await getQuickbooksConnectionStatus();
   const canConnect = permissions.quickbooks?.create === true;
   const canDisconnect = permissions.quickbooks?.delete === true;
+  const canSync = permissions.quickbooks?.edit === true;
   const statusMessage = status ? STATUS_MESSAGES[status] : undefined;
+  const pendingChanges = connection.connected && canSync ? await getPendingChanges() : [];
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-medium text-on-surface">QuickBooks</h1>
         <p className="text-sm text-on-surface-variant">
-          Connects to your QuickBooks Online company so this app can read data from it. Phase 1: connection only
-          -- catalog sync and sales history are separate, later steps.
+          Connects to your QuickBooks Online company and keeps the catalog in sync. New or changed items detected
+          in QuickBooks wait here for review before they touch your data -- nothing is written automatically.
         </p>
       </div>
 
@@ -96,6 +104,31 @@ export default async function QuickbooksPage({
           </div>
         )}
       </Card>
+
+      {connection.connected && canSync && (
+        <Card className="max-w-3xl">
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-medium text-on-surface">Catalog sync</h2>
+                <p className="text-sm text-on-surface-variant">
+                  {connection.lastItemSyncAt
+                    ? `Last synced ${new Date(connection.lastItemSyncAt).toLocaleString()}`
+                    : "Never synced yet -- runs automatically once a day, or trigger it now."}
+                </p>
+              </div>
+              <SyncNowButton />
+            </div>
+
+            <div>
+              <h3 className="mb-2 text-sm font-medium text-on-surface">
+                Pending review {pendingChanges.length > 0 && `(${pendingChanges.length})`}
+              </h3>
+              <PendingChangesList changes={pendingChanges} />
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }
