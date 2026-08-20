@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-08-20
+
+### New: QuickBooks Online connection (Phase 1)
+- Added an `/admin/quickbooks` page to connect this app to the shop's real QuickBooks Online company via OAuth — the groundwork for keeping the item catalog in sync and eventually backfilling historical sales into POS's Analytics. This phase is connection-only: no data syncs yet. Tokens are stored admin-only, never exposed to the browser or logged in the audit trail.
+
 ## 2026-08-19
 
 ### Fixed
