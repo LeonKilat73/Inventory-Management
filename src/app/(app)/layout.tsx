@@ -19,6 +19,7 @@ const NAV_ITEMS: { href: string; label: string; module: Module | null; icon: Nav
   { href: "/admin/roles", label: "Roles", module: "roles", icon: "roles" },
   { href: "/audit-log", label: "Logs", module: "audit_log", icon: "auditLog" },
   { href: "/admin/api-keys", label: "API Keys", module: "api_keys", icon: "apiKeys" },
+  { href: "/admin/quickbooks", label: "QuickBooks", module: "quickbooks", icon: "quickbooks" },
 ];
 
 export default async function AppLayout({

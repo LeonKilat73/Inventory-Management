@@ -21,7 +21,8 @@ export type NavIcon =
   | "users"
   | "roles"
   | "auditLog"
-  | "apiKeys";
+  | "apiKeys"
+  | "quickbooks";
 type NavItem = { href: string; label: string; icon: NavIcon };
 
 const icons: Record<NavIcon, React.ReactNode> = {
@@ -114,6 +115,13 @@ const icons: Record<NavIcon, React.ReactNode> = {
     <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
       <circle cx="6.3" cy="13.7" r="3.3" />
       <path d="m8.6 11.4 7.9-7.9M13.5 6l2 2M16 3.5l2 2" strokeLinecap="round" />
+    </svg>
+  ),
+  quickbooks: (
+    <svg viewBox="0 0 20 20" fill="none" strokeWidth="1.6" stroke="currentColor">
+      <rect x="2" y="6.5" width="7" height="7" rx="3.5" />
+      <rect x="11" y="6.5" width="7" height="7" rx="3.5" />
+      <path d="M9 10h2" strokeLinecap="round" />
     </svg>
   ),
 };

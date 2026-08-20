@@ -12,6 +12,7 @@ export const MODULES = [
   "users",
   "roles",
   "api_keys",
+  "quickbooks",
 ] as const;
 
 export const ACTIONS = [
