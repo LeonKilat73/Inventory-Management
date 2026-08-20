@@ -12,6 +12,10 @@ export const itemSchema = z.object({
   // Only meaningful on create -- updateItem ignores it (stock is adjusted
   // separately via QuickAdjustStockForm once an item already exists).
   initialQuantity: z.coerce.number().int().nonnegative().optional(),
+  // Made-to-order items: lets a sale go through even at zero stock instead
+  // of being rejected by the oversell guard. See fn_record_pos_sale /
+  // recordStockMovement.
+  allowBackorder: z.boolean().default(false),
 });
 
 export type ItemInput = z.infer<typeof itemSchema>;
@@ -27,6 +31,7 @@ export function parseItemFormData(formData: FormData) {
     reorderThreshold: formData.get("reorderThreshold") || 0,
     reorderQuantity: formData.get("reorderQuantity") || undefined,
     initialQuantity: formData.get("initialQuantity") || undefined,
+    allowBackorder: formData.get("allowBackorder") === "true",
   });
 }
 

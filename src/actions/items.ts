@@ -45,6 +45,7 @@ export async function createItem(
       unit_price: v.unitPrice ?? null,
       reorder_threshold: v.reorderThreshold,
       reorder_quantity: v.reorderQuantity ?? null,
+      allow_backorder: v.allowBackorder,
     })
     .select("id")
     .single();
@@ -105,6 +106,7 @@ export async function updateItem(
       unit_price: v.unitPrice ?? null,
       reorder_threshold: v.reorderThreshold,
       reorder_quantity: v.reorderQuantity ?? null,
+      allow_backorder: v.allowBackorder,
     })
     .eq("id", id);
 

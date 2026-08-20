@@ -17,6 +17,7 @@ export type ItemRow = {
   unitCost: number | null;
   unitPrice: number | null;
   isActive: boolean;
+  allowBackorder: boolean;
 };
 
 export function ItemsTable({
@@ -155,6 +156,7 @@ export function ItemsTable({
                     <div className="flex items-center gap-2">
                       <span>{item.stock}</span>
                       {lowStock && <Badge tone="error">Reorder</Badge>}
+                      {item.allowBackorder && <Badge tone="secondary">Backorder</Badge>}
                     </div>
                   </td>
                   <td className="px-4 py-3">{item.unitCost != null ? `₱${item.unitCost}` : "—"}</td>
@@ -200,6 +202,7 @@ export function ItemsTable({
                 <span className="flex items-center gap-1.5">
                   Stock: {item.stock}
                   {lowStock && <Badge tone="error">Reorder</Badge>}
+                  {item.allowBackorder && <Badge tone="secondary">Backorder</Badge>}
                 </span>
                 <span>Cost: {item.unitCost != null ? `₱${item.unitCost}` : "—"}</span>
                 <span>Price: {item.unitPrice != null ? `₱${item.unitPrice}` : "—"}</span>

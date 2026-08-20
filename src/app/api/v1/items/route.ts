@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   let query = auth.supabase
     .from("items")
     .select(
-      "id, sku, name, description, unit_price, is_bundle, is_active, reorder_threshold, categories(name)",
+      "id, sku, name, description, unit_price, is_bundle, is_active, reorder_threshold, allow_backorder, categories(name)",
     )
     .eq("is_active", true)
     .order("name");
@@ -64,6 +64,7 @@ export async function GET(request: NextRequest) {
       isBundle: item.is_bundle,
       stock: item.is_bundle ? bundleStockById.get(item.id) ?? 0 : stockByItemId.get(item.id) ?? 0,
       reorderThreshold: item.reorder_threshold,
+      allowBackorder: item.allow_backorder,
       ...(item.is_bundle ? { constituents: constituentsByBundleId.get(item.id) ?? [] } : {}),
     };
   });

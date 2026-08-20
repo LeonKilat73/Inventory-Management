@@ -52,7 +52,14 @@ export async function recordStockMovement(
   if (isDecrease) {
     const currentStock = await getCurrentStock(supabase, input.itemId);
     if (currentStock + quantityDelta < 0) {
-      throw new Error(`Only ${currentStock} in stock -- can't remove ${input.quantity}.`);
+      const { data: item } = await supabase
+        .from("items")
+        .select("allow_backorder")
+        .eq("id", input.itemId)
+        .single();
+      if (!item?.allow_backorder) {
+        throw new Error(`Only ${currentStock} in stock -- can't remove ${input.quantity}.`);
+      }
     }
   }
 

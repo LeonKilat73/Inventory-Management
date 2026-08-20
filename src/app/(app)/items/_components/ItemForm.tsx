@@ -18,6 +18,7 @@ type ItemDefaults = {
   unit_price?: number | null;
   reorder_threshold?: number;
   reorder_quantity?: number | null;
+  allow_backorder?: boolean;
 };
 
 const initialState: ActionState = { error: null };
@@ -159,6 +160,23 @@ export function ItemForm({
           />
         )}
       </div>
+
+      <label className="flex items-start gap-2 text-sm text-on-surface">
+        <input
+          type="checkbox"
+          name="allowBackorder"
+          value="true"
+          defaultChecked={defaults?.allow_backorder ?? false}
+          className="mt-0.5"
+        />
+        <span>
+          Allow selling past zero stock
+          <span className="block text-xs text-on-surface-variant">
+            For made-to-order items -- a sale still goes through and gets logged even at 0 in stock, instead of
+            being rejected. The stock shown never goes below 0; reorder threshold still applies as usual.
+          </span>
+        </span>
+      </label>
 
       {state.error && <p className="text-sm text-error">{state.error}</p>}
 

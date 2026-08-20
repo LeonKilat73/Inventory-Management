@@ -2,6 +2,9 @@
 
 ## 2026-08-20
 
+### New: Made-to-order items ("allow backorder")
+- Items can now be marked to allow selling past zero stock (for made-to-order goods like custom decals) — a sale still gets logged in the ledger like any other purchase instead of being rejected. Displayed stock never goes negative regardless (floors at 0 everywhere it's shown — Items, Dashboard, reorder suggestions, POS's catalog), and reorder threshold still works exactly as before as the signal to restock/produce more. New checkbox on the item form; a "Backorder" badge shows next to the stock number when it's on. This also fixes the guard in `fn_record_pos_sale` (the function POS's checkout calls to log a sale) so a made-to-order line, or a bundle whose constituent is made-to-order, isn't rejected the way a real oversell still correctly is. Verified live: confirmed the guard still blocks a normal item at 0 stock, allows a flagged item and a flagged bundle constituent through (both plain-line and bundle-override code paths), and ran one real POS checkout end-to-end for a made-to-order test item before voiding it and cleaning up.
+
 ### New: Edit bundles
 - Bundles could previously only be created, deactivated, or (hard) deleted — no way to fix a name, price, category, or its list of constituent items without recreating it. Added an Edit option next to each bundle that opens the same form pre-filled, including add/remove on individual constituent rows. Verified live: renamed the existing "SET 2" bundle to "Alpine Set 2" (its constituents and price carried over untouched) — also fixes the QuickBooks bundle-matching gap noted below, since the name now matches QuickBooks' own "Alpine Set 2" Group.
 
