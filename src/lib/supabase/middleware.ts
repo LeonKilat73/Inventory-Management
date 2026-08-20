@@ -5,11 +5,13 @@ import { asSessionCookie } from "./sessionCookie";
 
 // Paths that don't require a Supabase session cookie: /login itself, /api/*
 // (the external REST API in src/app/api/v1 authenticates via API key, see
-// src/lib/apiAuth.ts, never a browser session), and /auth/callback -- a user
+// src/lib/apiAuth.ts, never a browser session), /auth/callback -- a user
 // clicking an invite/recovery email link has no session yet, so that route
 // must be reachable before the code-exchange sets one, or the redirect to
-// /login would fire first and the link would never work.
-const SESSION_EXEMPT_PATHS = ["/login", "/reset-password", "/api", "/auth/callback"];
+// /login would fire first and the link would never work -- and /legal/* (the
+// EULA/Privacy Policy pages Intuit's QuickBooks Production unlock requires
+// to be publicly reachable, see src/app/legal/**).
+const SESSION_EXEMPT_PATHS = ["/login", "/reset-password", "/api", "/auth/callback", "/legal"];
 
 // Refreshes the Supabase auth session on every request and redirects
 // unauthenticated users to /login. This is the cheap, request-wide gate --
