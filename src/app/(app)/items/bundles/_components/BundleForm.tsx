@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { createBundle, type ActionState } from "@/actions/items";
+import type { ActionState } from "@/actions/items";
 import { previewNextSku } from "@/actions/categories";
 import { Button } from "@/components/ui/Button";
 import { TextField, SelectField } from "@/components/ui/Field";
@@ -9,19 +9,34 @@ import { TextField, SelectField } from "@/components/ui/Field";
 type Item = { id: string; name: string; sku: string };
 type Category = { id: string; name: string };
 
-const initialState: ActionState = { error: null };
+type BundleDefaults = {
+  id?: string;
+  sku?: string;
+  name?: string;
+  categoryId?: string | null;
+  bundlePrice?: number;
+  constituents?: Array<{ itemId: string; quantity: number }>;
+};
+
+type ConstituentRow = { key: number; itemId?: string; quantity?: number };
 
 export function BundleForm({
+  action,
   items,
   categories,
+  defaults,
+  submitLabel,
   onSuccess,
 }: {
+  action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   items: Item[];
   categories: Category[];
+  defaults?: BundleDefaults;
+  submitLabel: string;
   onSuccess?: () => void;
 }) {
-  const [state, formAction, pending] = useActionState(createBundle, initialState);
-  const [rowCount, setRowCount] = useState(2);
+  const initialState: ActionState = { error: null };
+  const [state, formAction, pending] = useActionState(action, initialState);
 
   const wasPending = useRef(false);
   useEffect(() => {
@@ -31,15 +46,18 @@ export function BundleForm({
     wasPending.current = pending;
   }, [pending, state, onSuccess]);
 
-  const [categoryId, setCategoryId] = useState("");
-  const [sku, setSku] = useState("");
-  const [skuAuto, setSkuAuto] = useState(true);
+  // Auto-fill only applies to new bundles -- editing an existing one keeps
+  // its SKU as a plain manual field, same convention as ItemForm.
+  const isCreate = !defaults?.id;
+  const [categoryId, setCategoryId] = useState(defaults?.categoryId ?? "");
+  const [sku, setSku] = useState(defaults?.sku ?? "");
+  const [skuAuto, setSkuAuto] = useState(isCreate);
 
   const previewRequestId = useRef(0);
   function handleCategoryChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value;
     setCategoryId(value);
-    if (!skuAuto) return;
+    if (!isCreate || !skuAuto) return;
 
     const requestId = ++previewRequestId.current;
     if (!value) {
@@ -51,9 +69,23 @@ export function BundleForm({
     });
   }
 
+  const initialRows: ConstituentRow[] = defaults?.constituents?.length
+    ? defaults.constituents.map((c, i) => ({ key: i, itemId: c.itemId, quantity: c.quantity }))
+    : [{ key: 0 }, { key: 1 }];
+  const nextKey = useRef(initialRows.length);
+  const [rows, setRows] = useState<ConstituentRow[]>(initialRows);
+
+  function addRow() {
+    setRows((r) => [...r, { key: nextKey.current++ }]);
+  }
+  function removeRow(key: number) {
+    setRows((r) => (r.length > 1 ? r.filter((row) => row.key !== key) : r));
+  }
+
   return (
     <form action={formAction} className="space-y-4">
-      <input type="hidden" name="skuAuto" value={skuAuto ? "true" : "false"} />
+      {defaults?.id && <input type="hidden" name="id" value={defaults.id} />}
+      {isCreate && <input type="hidden" name="skuAuto" value={skuAuto ? "true" : "false"} />}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -63,17 +95,17 @@ export function BundleForm({
             value={sku}
             onChange={(e) => {
               setSku(e.target.value);
-              setSkuAuto(false);
+              if (isCreate) setSkuAuto(false);
             }}
             required
           />
-          {skuAuto && (
+          {isCreate && skuAuto && (
             <p className="mt-1 text-xs text-on-surface-variant">
               {categoryId ? "Auto-generated — edit to override." : "Pick a category to auto-generate, or type your own."}
             </p>
           )}
         </div>
-        <TextField label="Name" name="name" required />
+        <TextField label="Name" name="name" defaultValue={defaults?.name} required />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -90,6 +122,7 @@ export function BundleForm({
           name="bundlePrice"
           type="number"
           step="0.01"
+          defaultValue={defaults?.bundlePrice}
           required
         />
       </div>
@@ -98,13 +131,14 @@ export function BundleForm({
         <span className="block text-sm font-medium text-on-surface-variant">
           Constituent items
         </span>
-        <div className="grid grid-cols-[1fr_96px] gap-3 text-xs font-medium text-on-surface-variant">
+        <div className="grid grid-cols-[1fr_96px_auto] gap-3 text-xs font-medium text-on-surface-variant">
           <span>Item</span>
           <span>Quantity</span>
+          <span />
         </div>
-        {Array.from({ length: rowCount }).map((_, i) => (
-          <div key={i} className="grid grid-cols-[1fr_96px] gap-3">
-            <SelectField label="" name="itemId" required>
+        {rows.map((row) => (
+          <div key={row.key} className="grid grid-cols-[1fr_96px_auto] items-center gap-3">
+            <SelectField label="" name="itemId" defaultValue={row.itemId ?? ""} required>
               <option value="">Select an item…</option>
               {items.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -112,21 +146,18 @@ export function BundleForm({
                 </option>
               ))}
             </SelectField>
-            <TextField
-              label=""
-              name="quantity"
-              type="number"
-              min={1}
-              defaultValue={1}
-              required
-            />
+            <TextField label="" name="quantity" type="number" min={1} defaultValue={row.quantity ?? 1} required />
+            <button
+              type="button"
+              onClick={() => removeRow(row.key)}
+              disabled={rows.length === 1}
+              className="text-sm text-error underline underline-offset-2 disabled:pointer-events-none disabled:opacity-30"
+            >
+              Remove
+            </button>
           </div>
         ))}
-        <button
-          type="button"
-          onClick={() => setRowCount((n) => n + 1)}
-          className="text-sm text-primary underline underline-offset-2"
-        >
+        <button type="button" onClick={addRow} className="text-sm text-primary underline underline-offset-2">
           + Add another item
         </button>
       </div>
@@ -134,7 +165,7 @@ export function BundleForm({
       {state.error && <p className="text-sm text-error">{state.error}</p>}
 
       <Button type="submit" disabled={pending}>
-        {pending ? "Saving…" : "Create bundle"}
+        {pending ? "Saving…" : submitLabel}
       </Button>
     </form>
   );

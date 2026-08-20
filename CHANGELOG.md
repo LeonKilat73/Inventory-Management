@@ -2,6 +2,9 @@
 
 ## 2026-08-20
 
+### New: Edit bundles
+- Bundles could previously only be created, deactivated, or (hard) deleted — no way to fix a name, price, category, or its list of constituent items without recreating it. Added an Edit option next to each bundle that opens the same form pre-filled, including add/remove on individual constituent rows. Verified live: renamed the existing "SET 2" bundle to "Alpine Set 2" (its constituents and price carried over untouched) — also fixes the QuickBooks bundle-matching gap noted below, since the name now matches QuickBooks' own "Alpine Set 2" Group.
+
 ### New: QuickBooks catalog sync (Phase 2)
 - `/admin/quickbooks` now keeps the item catalog in sync with QuickBooks: a daily automatic check (plus a manual "Run sync now" button) links existing items/categories to their QuickBooks counterparts by name, and surfaces genuinely new or changed items in a review queue — nothing is written to the catalog without an admin approving it first. QuickBooks' own item categories map directly onto this app's category tree, and QuickBooks' "Group" items (its own bundle concept) map onto this app's bundles. Verified against the real connected company: 68 categories and 599 items linked automatically, 127 genuine new/changed items left for review, two applied and one dismissed as a live test (a new office item and a real stock/price update went through correctly; the dismissal will resurface on the next sync since the underlying QuickBooks data is still different).
 - Note for review: a handful of existing bundles (the ones named just "SET 1", "SET 2", etc.) don't share a name with their QuickBooks counterpart ("Alpine Set 1", "JBL Set 2", ...), so those showed up as *new* bundle proposals rather than being auto-linked — approving them as-is would create duplicates. Worth renaming the existing bundles to match QuickBooks (or dismissing those specific proposals) before touching that part of the queue.

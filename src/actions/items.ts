@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { parseItemFormData, parseBundleFormData } from "@/lib/validation/item";
 import { recordStockMovement } from "@/lib/stock/ledger";
@@ -218,6 +219,58 @@ export async function createBundle(
   );
 
   if (constituentsError) return { error: constituentsError.message };
+
+  revalidatePath("/items/bundles");
+  return ok;
+}
+
+// Renames/reprices a bundle and replaces its constituent list wholesale
+// (the form always submits the full intended set, so a diff isn't worth
+// the complexity). Uses the admin client for the bundle_items swap: doing
+// it through the normal client would need the caller to hold both
+// bundles.create and bundles.delete (bundle_items' own RLS policies), not
+// just bundles.edit -- three permissions for what's conceptually one
+// action. requirePermission below is still the real gate.
+export async function updateBundle(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requirePermission("bundles", "edit");
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "Missing bundle id." };
+
+  const parsed = parseBundleFormData(formData);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+  const v = parsed.data;
+
+  if (v.itemIds.length !== v.quantities.length) {
+    return { error: "Each constituent item needs a quantity." };
+  }
+  if (new Set(v.itemIds).size !== v.itemIds.length) {
+    return { error: "Each item can only appear once in a bundle." };
+  }
+
+  const admin = createAdminClient();
+
+  const { error: itemError } = await admin
+    .from("items")
+    .update({ sku: v.sku, name: v.name, category_id: v.categoryId || null, unit_price: v.bundlePrice })
+    .eq("id", id);
+  if (itemError) return { error: itemError.message };
+
+  const { error: bundleError } = await admin.from("bundles").update({ bundle_price: v.bundlePrice }).eq("id", id);
+  if (bundleError) return { error: bundleError.message };
+
+  const { error: deleteError } = await admin.from("bundle_items").delete().eq("bundle_id", id);
+  if (deleteError) return { error: deleteError.message };
+
+  const { error: insertError } = await admin
+    .from("bundle_items")
+    .insert(v.itemIds.map((itemId, i) => ({ bundle_id: id, item_id: itemId, quantity: v.quantities[i] })));
+  if (insertError) return { error: insertError.message };
 
   revalidatePath("/items/bundles");
   return ok;

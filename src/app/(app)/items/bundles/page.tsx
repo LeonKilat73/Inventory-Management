@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
 import { buildCategoryOptions } from "@/lib/categoryOptions";
 import { AddBundleButton } from "./_components/AddBundleButton";
+import { EditBundleButton } from "./_components/EditBundleButton";
 import { BundleActions } from "./_components/BundleActions";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -11,10 +12,11 @@ type BundleRow = {
   sku: string;
   name: string;
   unit_price: number | null;
+  category_id: string | null;
   is_active: boolean;
   bundles: {
     bundle_price: number;
-    bundle_items: { quantity: number; items: { sku: string; name: string } }[];
+    bundle_items: { item_id: string; quantity: number; items: { sku: string; name: string } }[];
   } | null;
 };
 
@@ -26,7 +28,7 @@ export default async function BundlesPage() {
     supabase
       .from("items")
       .select(
-        "id, sku, name, unit_price, is_active, bundles(bundle_price, bundle_items(quantity, items(sku, name)))",
+        "id, sku, name, unit_price, category_id, is_active, bundles(bundle_price, bundle_items(item_id, quantity, items(sku, name)))",
       )
       .eq("is_bundle", true)
       .order("name")
@@ -39,6 +41,7 @@ export default async function BundlesPage() {
   const availableByBundleId = new Map((availability ?? []).map((a) => [a.bundle_id, a.available]));
 
   const canCreate = permissions.bundles?.create === true;
+  const canEdit = permissions.bundles?.edit === true;
   const canDelete = permissions.bundles?.delete === true;
 
   return (
@@ -74,6 +77,23 @@ export default async function BundlesPage() {
                 <p className="font-medium text-on-surface">
                   ₱{bundle.bundles?.bundle_price ?? bundle.unit_price}
                 </p>
+                {canEdit && (
+                  <EditBundleButton
+                    bundle={{
+                      id: bundle.id,
+                      sku: bundle.sku,
+                      name: bundle.name,
+                      categoryId: bundle.category_id,
+                      bundlePrice: bundle.bundles?.bundle_price ?? bundle.unit_price ?? 0,
+                      constituents: (bundle.bundles?.bundle_items ?? []).map((bi) => ({
+                        itemId: bi.item_id,
+                        quantity: bi.quantity,
+                      })),
+                    }}
+                    items={plainItems ?? []}
+                    categories={buildCategoryOptions(categories ?? [])}
+                  />
+                )}
                 <BundleActions bundleId={bundle.id} isActive={bundle.is_active} canDelete={canDelete} />
               </div>
             </div>

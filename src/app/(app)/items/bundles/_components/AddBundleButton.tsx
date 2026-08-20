@@ -2,6 +2,7 @@
 
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { createBundle } from "@/actions/items";
 import { BundleForm } from "./BundleForm";
 
 type Item = { id: string; name: string; sku: string };
@@ -17,7 +18,9 @@ export function AddBundleButton({ items, categories }: { items: Item[]; categori
         </Button>
       )}
     >
-      {(close) => <BundleForm items={items} categories={categories} onSuccess={close} />}
+      {(close) => (
+        <BundleForm action={createBundle} items={items} categories={categories} submitLabel="Create bundle" onSuccess={close} />
+      )}
     </Modal>
   );
 }
