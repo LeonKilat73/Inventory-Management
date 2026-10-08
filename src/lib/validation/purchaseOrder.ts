@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const purchaseOrderSchema = z.object({
   supplierId: z.string().uuid("Pick a supplier"),
+  approverId: z.string().uuid("Pick who will approve this order"),
   poNumber: z.string().trim().min(1, "PO number is required").max(64),
   expectedAt: z.string().optional().or(z.literal("")),
   notes: z.string().trim().max(2000).optional().or(z.literal("")),
@@ -13,6 +14,7 @@ export const purchaseOrderSchema = z.object({
 export function parsePurchaseOrderFormData(formData: FormData) {
   return purchaseOrderSchema.safeParse({
     supplierId: formData.get("supplierId"),
+    approverId: formData.get("approverId"),
     poNumber: formData.get("poNumber"),
     expectedAt: formData.get("expectedAt") ?? "",
     notes: formData.get("notes") ?? "",

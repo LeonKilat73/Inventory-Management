@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getPermissions } from "@/lib/auth/permissions";
+import { getCurrentUser, getPermissions } from "@/lib/auth/permissions";
+import type { ApprovalStatus } from "@/lib/purchaseOrders/approvalLabel";
 import { submitPurchaseOrder } from "@/actions/purchaseOrders";
 import { ReceiveLineForm } from "../_components/ReceiveLineForm";
+import { PurchaseOrderActions } from "../_components/PurchaseOrderActions";
+import { ApprovalPanel } from "../_components/ApprovalPanel";
 import { ScanToReceive } from "../_components/ScanToReceive";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -45,7 +48,9 @@ export default async function PurchaseOrderDetailPage({
   const [{ data: po }, { data: lines }] = await Promise.all([
     supabase
       .from("purchase_orders")
-      .select("id, po_number, status, ordered_at, expected_at, notes, suppliers(name)")
+      .select(
+        "id, po_number, status, ordered_at, expected_at, notes, created_by, approver_id, approver_email, approval_status, approval_requested_at, approval_decided_at, approval_note, approval_email_sent_at, suppliers(name)",
+      )
       .eq("id", poId)
       .single(),
     supabase
@@ -58,6 +63,13 @@ export default async function PurchaseOrderDetailPage({
   if (!po) notFound();
 
   const supplier = Array.isArray(po.suppliers) ? po.suppliers[0] : po.suppliers;
+  const currentUser = await getCurrentUser();
+  const approvalStatus = (po.approval_status ?? null) as ApprovalStatus;
+  const viewerIsCreator = !!currentUser && po.created_by === currentUser.id;
+  const when = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Manila" })
+      : null;
   const canEdit = permissions.purchase_orders?.edit === true;
   const canReceive = permissions.purchase_orders?.receive === true;
   const canReceiveNow = canReceive && (po.status === "submitted" || po.status === "partially_received");
@@ -75,6 +87,25 @@ export default async function PurchaseOrderDetailPage({
           {po.status.replace("_", " ")}
         </Badge>
       </div>
+
+      <ApprovalPanel
+        poId={po.id}
+        status={approvalStatus}
+        approverEmail={po.approver_email}
+        requestedLabel={when(po.approval_requested_at)}
+        decidedLabel={when(po.approval_decided_at)}
+        note={po.approval_note}
+        emailSentLabel={when(po.approval_email_sent_at)}
+        canDecide={
+          approvalStatus === "pending" &&
+          permissions.purchase_orders?.approve === true &&
+          !!currentUser &&
+          po.approver_id === currentUser.id &&
+          !viewerIsCreator
+        }
+        canResend={canEdit}
+        viewerIsCreator={viewerIsCreator}
+      />
 
       <Card>
         <dl className="grid grid-cols-2 gap-4 text-sm">
@@ -101,6 +132,16 @@ export default async function PurchaseOrderDetailPage({
             </Button>
           </form>
         )}
+
+        <PurchaseOrderActions
+          poId={po.id}
+          poNumber={po.po_number}
+          isApproved={approvalStatus === "approved"}
+          status={po.status}
+          hasReceipts={(lines ?? []).some((line) => line.quantity_received > 0)}
+          canEdit={canEdit}
+          canDelete={permissions.purchase_orders?.delete === true}
+        />
       </Card>
 
       {canReceiveNow && (

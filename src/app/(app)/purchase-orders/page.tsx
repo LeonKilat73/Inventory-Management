@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getPermissions } from "@/lib/auth/permissions";
+import { getCurrentUser, getPermissions } from "@/lib/auth/permissions";
+import { getEligibleApprovers } from "@/lib/purchaseOrders/approvers";
+import { approvalLabel, type ApprovalStatus } from "@/lib/purchaseOrders/approvalLabel";
 import { PurchaseOrderForm } from "./_components/PurchaseOrderForm";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -19,6 +21,8 @@ type PoRow = {
   status: keyof typeof STATUS_TONE;
   ordered_at: string | null;
   expected_at: string | null;
+  approver_email: string | null;
+  approval_status: ApprovalStatus;
   suppliers: { name: string } | { name: string }[] | null;
 };
 
@@ -29,7 +33,7 @@ export default async function PurchaseOrdersPage() {
   const [{ data: orders }, { data: suppliers }, { data: items }] = await Promise.all([
     supabase
       .from("purchase_orders")
-      .select("id, po_number, status, ordered_at, expected_at, suppliers(name)")
+      .select("id, po_number, status, ordered_at, expected_at, approver_email, approval_status, suppliers(name)")
       .order("created_at", { ascending: false })
       .returns<PoRow[]>(),
     supabase.from("suppliers").select("id, name").eq("is_active", true).order("name"),
@@ -37,6 +41,8 @@ export default async function PurchaseOrdersPage() {
   ]);
 
   const canCreate = permissions.purchase_orders?.create === true;
+  const currentUser = canCreate ? await getCurrentUser() : null;
+  const approvers = currentUser ? await getEligibleApprovers(currentUser.id) : [];
 
   return (
     <div className="space-y-8">
@@ -64,6 +70,7 @@ export default async function PurchaseOrdersPage() {
               <th className="px-4 py-3 font-medium">PO #</th>
               <th className="px-4 py-3 font-medium">Supplier</th>
               <th className="px-4 py-3 font-medium">Status</th>
+              <th className="px-4 py-3 font-medium">Approval</th>
               <th className="px-4 py-3 font-medium">Ordered</th>
               <th className="px-4 py-3 font-medium">Expected</th>
               <th className="px-4 py-3" />
@@ -82,6 +89,12 @@ export default async function PurchaseOrdersPage() {
                   <td className="px-4 py-3">
                     <Badge tone={STATUS_TONE[po.status]}>{po.status.replace("_", " ")}</Badge>
                   </td>
+                  <td className="px-4 py-3">
+                    <Badge tone={approvalLabel(po.approval_status).tone}>{approvalLabel(po.approval_status).text}</Badge>
+                    {po.approver_email && (
+                      <p className="mt-1 text-xs text-on-surface-variant">{po.approver_email}</p>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-on-surface-variant">{po.ordered_at ?? "—"}</td>
                   <td className="px-4 py-3 text-on-surface-variant">{po.expected_at ?? "—"}</td>
                   <td className="px-4 py-3 text-right">
@@ -97,7 +110,7 @@ export default async function PurchaseOrdersPage() {
             })}
             {!orders?.length && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-on-surface-variant">
+                <td colSpan={7} className="px-4 py-6 text-center text-on-surface-variant">
                   No purchase orders yet.
                 </td>
               </tr>
@@ -120,6 +133,10 @@ export default async function PurchaseOrdersPage() {
                 <Badge tone={STATUS_TONE[po.status]}>{po.status.replace("_", " ")}</Badge>
               </div>
               <p className="mt-1 font-medium text-on-surface">{supplier?.name ?? "—"}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-on-surface-variant">
+                <Badge tone={approvalLabel(po.approval_status).tone}>{approvalLabel(po.approval_status).text}</Badge>
+                {po.approver_email && <span>{po.approver_email}</span>}
+              </div>
               <div className="mt-2 flex gap-4 text-xs text-on-surface-variant">
                 <span>Ordered {po.ordered_at ?? "—"}</span>
                 <span>Expected {po.expected_at ?? "—"}</span>
@@ -135,7 +152,7 @@ export default async function PurchaseOrdersPage() {
       {canCreate && (
         <Card className="max-w-2xl">
           <h2 className="mb-4 text-lg font-medium text-on-surface">New purchase order</h2>
-          <PurchaseOrderForm suppliers={suppliers ?? []} items={items ?? []} />
+          <PurchaseOrderForm suppliers={suppliers ?? []} items={items ?? []} approvers={approvers} />
         </Card>
       )}
     </div>

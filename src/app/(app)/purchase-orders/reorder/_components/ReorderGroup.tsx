@@ -17,6 +17,7 @@ export type SuggestedLine = {
 };
 
 type Supplier = { id: string; name: string };
+type Approver = { id: string; name: string; email: string };
 
 // Pre-fills a purchase order from low-stock suggestions and submits through
 // the exact same createPurchaseOrder action the regular "New purchase
@@ -30,12 +31,14 @@ export function ReorderGroup({
   supplierName,
   lines,
   suppliers,
+  approvers,
   defaultPoNumber,
 }: {
   supplierId: string | null;
   supplierName: string;
   lines: SuggestedLine[];
   suppliers: Supplier[];
+  approvers: Approver[];
   defaultPoNumber: string;
 }) {
   const router = useRouter();
@@ -81,6 +84,16 @@ export function ReorderGroup({
           </SelectField>
         )}
         <TextField label="PO number" name="poNumber" defaultValue={defaultPoNumber} required />
+        <SelectField label="Send to for approval" name="approverId" required defaultValue="">
+          <option value="" disabled>
+            {approvers.length === 0 ? "No one else can approve yet" : "Select who will approve…"}
+          </option>
+          {approvers.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name} ({a.email})
+            </option>
+          ))}
+        </SelectField>
 
         <div className="hidden grid-cols-[1fr_70px_80px_100px] gap-3 text-xs font-medium text-on-surface-variant sm:grid">
           <span>Item</span>
@@ -138,7 +151,7 @@ export function ReorderGroup({
         ))}
 
         {error && <p className="text-sm text-error">{error}</p>}
-        <Button type="submit" disabled={pending}>
+        <Button type="submit" disabled={pending || approvers.length === 0}>
           {pending ? "Creating…" : `Create draft PO (${lines.length} item${lines.length === 1 ? "" : "s"})`}
         </Button>
       </form>

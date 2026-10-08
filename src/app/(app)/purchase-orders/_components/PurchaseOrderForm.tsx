@@ -7,15 +7,18 @@ import { TextField, TextAreaField, SelectField } from "@/components/ui/Field";
 
 type Supplier = { id: string; name: string };
 type Item = { id: string; name: string; sku: string };
+type Approver = { id: string; name: string; email: string };
 
 const initialState: ActionState = { error: null };
 
 export function PurchaseOrderForm({
   suppliers,
   items,
+  approvers,
 }: {
   suppliers: Supplier[];
   items: Item[];
+  approvers: Approver[];
 }) {
   const [state, formAction, pending] = useActionState(createPurchaseOrder, initialState);
   const [rowCount, setRowCount] = useState(2);
@@ -36,6 +39,23 @@ export function PurchaseOrderForm({
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextField label="Expected delivery date" name="expectedAt" type="date" />
+        <div>
+          <SelectField label="Send to for approval" name="approverId" required defaultValue="">
+            <option value="" disabled>
+              Select who will approve…
+            </option>
+            {approvers.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name} ({a.email})
+              </option>
+            ))}
+          </SelectField>
+          <p className="mt-1 text-xs text-on-surface-variant">
+            {approvers.length === 0
+              ? "No one else can approve purchase orders yet. Give a manager or admin the approve permission first."
+              : "They get a notification and an email with a link, and only they can approve or reject it. You can't approve your own order."}
+          </p>
+        </div>
       </div>
 
       <TextAreaField label="Notes" name="notes" />
@@ -71,8 +91,9 @@ export function PurchaseOrderForm({
       </div>
 
       {state.error && <p className="text-sm text-error">{state.error}</p>}
+      {!state.error && state.notice && <p className="text-sm text-on-surface-variant">{state.notice}</p>}
 
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" disabled={pending || approvers.length === 0}>
         {pending ? "Saving…" : "Create purchase order"}
       </Button>
     </form>

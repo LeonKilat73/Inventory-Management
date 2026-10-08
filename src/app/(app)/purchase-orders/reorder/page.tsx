@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { getPermissions } from "@/lib/auth/permissions";
+import { getCurrentUser, getPermissions } from "@/lib/auth/permissions";
+import { getEligibleApprovers } from "@/lib/purchaseOrders/approvers";
 import { ReorderGroup, type SuggestedLine } from "./_components/ReorderGroup";
 
 type ItemRow = {
@@ -37,6 +38,8 @@ export default async function ReorderPage() {
   }
 
   const supabase = await createClient();
+  const currentUser = await getCurrentUser();
+  const approvers = currentUser ? await getEligibleApprovers(currentUser.id) : [];
 
   const [{ data: items }, { data: stockLevels }, { data: suppliers }] = await Promise.all([
     supabase
@@ -139,6 +142,7 @@ export default async function ReorderPage() {
             supplierName={group.supplierName}
             lines={group.lines}
             suppliers={suppliers ?? []}
+            approvers={approvers}
             defaultPoNumber={poNumberFor(i)}
           />
         ))}

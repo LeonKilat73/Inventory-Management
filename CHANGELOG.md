@@ -2,6 +2,17 @@
 
 ## 2026-10-08
 
+### New: Purchase order approval
+- Every new purchase order is now sent to one named approver, picked from the people who hold the approve permission (managers and admins by default; you can't pick yourself). They get a notification in the app and an email with a link; the link goes through sign-in and lands on the order, where they choose **Approve** or **Reject** (rejecting needs a reason). The order shows an approval label (Not approved yet / Approved / Rejected), who it was sent to, and when; the Purchase Orders list gets an Approval column with the approver's email. "Not approved" is only a label and doesn't block anything.
+- The rules live in the database, not just the screen: only the person it was sent to can decide, the creator can never approve their own order, and nobody can flip the approval with an ordinary edit. The approver's email is stored on the order and the audit log records who decided and when. Approved orders are harder to delete: the PO number has to be typed to confirm (still blocked once goods are received).
+- Email caveat: the sender is still Resend's shared test address, so emails to real colleagues won't deliver until a domain is verified (planned for next week). Until then the approver is still notified in the app, the order shows the email hasn't gone out, and a "Resend approval email" button sends it once email works. Orders created before this have no approver and show "No approval".
+
+### New: Cancel and Delete on purchase orders
+- A purchase order's page now has **Cancel order** (for submitted or partly received orders: nothing more can be received, anything already received stays in stock and on record) and **Delete order**, each with an inline "are you sure" step. Delete only works while nothing has been received against the order; it then removes the order, its lines and the delivery reminder it put on the calendar. Once goods have been received the order stays on record, because stock movements and expenses depend on it, and the page says so and points to Cancel. The rule is enforced in the database (`fn_delete_purchase_order`), not just hidden in the UI.
+
+### Fixed: deleting a supplier with purchase orders crashed with a server error
+- Clicking Delete on a supplier that any purchase order points at (every supplier that has ever been ordered from) threw the raw database error and showed a generic server error page. It now explains why it can't be deleted and suggests deactivating instead, same as items and bundles. Suppliers also got Deactivate / Reactivate on the list (inactive suppliers drop out of the purchase-order, reorder and calendar supplier pickers but stay on existing orders). A supplier with no orders still deletes cleanly.
+
 ### Changed: Slow movers report is readable now
 - The Reports page's "Slow movers" section used to print every active item with no sales as an identical pill, which on the real catalog meant a wall of ~670 names. It now only lists items that actually have units on the shelf (an item with zero stock and zero sales isn't slow, it just isn't stocked), headed by a summary of how many items, units and how much stock cost is sitting unsold. They are shown in a table (category, on hand, stock cost, last sold date) sorted by stock cost, 15 per page with Previous / Next and a page dropdown, the same way the Items list pages. A short note explains that only sales recorded in this system count, since sales rung up directly in QuickBooks aren't included. The CSV export is unchanged.
 
