@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteOrigin } from "@/lib/getSiteOrigin";
+import { safeInternalPath } from "@/lib/safeRedirect";
 
 export type AuthActionState = { error: string | null; info?: string | null };
 
@@ -17,7 +18,7 @@ export async function login(
 ): Promise<AuthActionState> {
   const identifier = String(formData.get("identifier") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const redirectTo = String(formData.get("redirectTo") ?? "") || "/dashboard";
+  const redirectTo = safeInternalPath(String(formData.get("redirectTo") ?? ""), "/dashboard");
 
   if (!identifier || !password) {
     return { error: "Email/username and password are required." };
@@ -27,12 +28,20 @@ export async function login(
   // Supabase Auth call -- there's no session yet to enforce this through
   // RLS, and we don't want to spend an auth attempt against an account
   // that's already locked or suspended.
+  // The identifier is interpolated into a PostgREST filter string below, so
+  // anything an email or username can't contain (commas and parentheses would
+  // let a caller add their own conditions, e.g. to land on a different
+  // account) is rejected the same way a wrong password is.
+  const looksValid = /^[a-z0-9@._+-]+$/.test(identifier);
+
   const admin = createAdminClient();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("id, email, is_active, is_suspended, admin_locked, locked_until")
-    .or(`email.eq.${identifier},username.eq.${identifier}`)
-    .maybeSingle();
+  const { data: profile } = looksValid
+    ? await admin
+        .from("profiles")
+        .select("id, email, is_active, is_suspended, admin_locked, locked_until")
+        .or(`email.eq.${identifier},username.eq.${identifier}`)
+        .maybeSingle()
+    : { data: null };
 
   if (!profile) {
     return { error: "Invalid email/username or password." };
@@ -100,12 +109,20 @@ export async function requestPasswordReset(
   const identifier = String(formData.get("identifier") ?? "").trim().toLowerCase();
   if (!identifier) return { error: "Enter your email or username." };
 
+  // The identifier is interpolated into a PostgREST filter string below, so
+  // anything outside what an email or username can contain (commas and
+  // parentheses would let a caller add their own conditions) is treated as
+  // "no such account" -- same generic reply as any other miss.
+  const looksValid = /^[a-z0-9@._+-]+$/.test(identifier);
+
   const admin = createAdminClient();
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("email")
-    .or(`email.eq.${identifier},username.eq.${identifier}`)
-    .maybeSingle();
+  const { data: profile } = looksValid
+    ? await admin
+        .from("profiles")
+        .select("email")
+        .or(`email.eq.${identifier},username.eq.${identifier}`)
+        .maybeSingle()
+    : { data: null };
 
   if (profile?.email) {
     const origin = await getSiteOrigin();

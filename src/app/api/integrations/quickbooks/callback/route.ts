@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/lib/auth/requirePermission";
+import { requireRoutePermission } from "@/lib/auth/routeAuth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { exchangeCodeForTokens } from "@/lib/quickbooks/oauth";
 
@@ -20,7 +20,9 @@ function redirectWithStatus(request: NextRequest, status: string) {
 // actually works (not just "the token exchange didn't error") and to grab
 // the company name for display, then stores the connection.
 export async function GET(request: NextRequest) {
-  const user = await requirePermission("quickbooks", "create");
+  const auth = await requireRoutePermission("quickbooks", "create");
+  if ("response" in auth) return auth.response;
+  const user = auth.user;
 
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");

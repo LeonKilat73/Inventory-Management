@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Card } from "@/components/ui/Card";
+import { safeInternalPath } from "@/lib/safeRedirect";
 
 // Landing point for invite/recovery emails. Supabase's admin-initiated links
 // (inviteUserByEmail, resetPasswordForEmail called from a server action --
@@ -31,7 +32,7 @@ function AuthCallback() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const next = searchParams.get("next") ?? "/reset-password";
+    const next = safeInternalPath(searchParams.get("next"), "/reset-password");
     const supabase = createClient();
 
     async function complete() {

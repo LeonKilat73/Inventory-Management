@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { requirePermission } from "@/lib/auth/requirePermission";
+import { requireRoutePermission } from "@/lib/auth/routeAuth";
 import { getAuthorizeUrl } from "@/lib/quickbooks/oauth";
 
 const STATE_COOKIE = "qbo_oauth_state";
@@ -11,7 +11,8 @@ const STATE_COOKIE = "qbo_oauth_state";
 // can't be triggered by a forged request from somewhere else (standard
 // OAuth CSRF protection).
 export async function GET() {
-  await requirePermission("quickbooks", "create");
+  const auth = await requireRoutePermission("quickbooks", "create");
+  if ("response" in auth) return auth.response;
 
   const state = randomUUID();
   const response = NextResponse.redirect(getAuthorizeUrl(state));

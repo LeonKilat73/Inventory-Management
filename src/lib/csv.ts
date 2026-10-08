@@ -2,8 +2,18 @@ import "server-only";
 
 type Column<T> = { key: keyof T; header: string };
 
+// Excel/Sheets run any text cell that starts with = + - @ (or a tab/CR) as a
+// formula, so an item or supplier named `=HYPERLINK(...)` would execute when
+// the export is opened. A leading apostrophe makes it plain text. Real numbers
+// (including negative ones like a -3 stock movement) are left alone.
+function neutralizeFormula(str: string): string {
+  if (/^-?\d+(\.\d+)?$/.test(str)) return str;
+  return /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+}
+
 function escapeCsvValue(value: unknown): string {
-  const str = value === null || value === undefined ? "" : String(value);
+  const raw = value === null || value === undefined ? "" : String(value);
+  const str = typeof value === "string" ? neutralizeFormula(raw) : raw;
   return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
 
