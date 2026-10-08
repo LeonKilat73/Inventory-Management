@@ -45,7 +45,7 @@ export default async function EditItemPage({
         </h1>
         <ItemForm
           action={updateItem}
-          categories={buildCategoryOptions(categories ?? [])}
+          categories={buildCategoryOptions(categories ?? [], item.category_id)}
           defaults={item}
           submitLabel="Save changes"
         />

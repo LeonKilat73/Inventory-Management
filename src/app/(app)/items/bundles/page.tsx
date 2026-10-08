@@ -91,7 +91,7 @@ export default async function BundlesPage() {
                       })),
                     }}
                     items={plainItems ?? []}
-                    categories={buildCategoryOptions(categories ?? [])}
+                    categories={buildCategoryOptions(categories ?? [], bundle.category_id)}
                   />
                 )}
                 <BundleActions bundleId={bundle.id} isActive={bundle.is_active} canDelete={canDelete} />

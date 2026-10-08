@@ -56,6 +56,14 @@ export async function dismissPendingChange(id: string): Promise<{ error: string 
   return { error: null };
 }
 
+// QuickBooks only knows a category when the item has a parent there that is
+// already mapped; otherwise categoryId arrives as null. On an UPDATE that
+// must mean "no opinion", not "clear it" -- writing null here silently wiped
+// the category of items that had one locally (they ended up uncategorized).
+function categoryIfKnown(categoryId: string | null): { category_id?: string } {
+  return categoryId ? { category_id: categoryId } : {};
+}
+
 async function applyNewItem(admin: AdminClient, change: PendingChange, userId: string) {
   const p = change.payload as {
     name: string;
@@ -112,6 +120,7 @@ async function applyUpdatedItem(admin: AdminClient, change: PendingChange, userI
     isActive: boolean;
     tracksQty: boolean;
     qtyOnHand: number | null;
+    diff?: Record<string, { from: unknown; to: unknown }>;
     isBundle?: boolean;
     bundlePrice?: number;
     constituents?: Array<{ itemId: string; quantity: number }>;
@@ -120,7 +129,12 @@ async function applyUpdatedItem(admin: AdminClient, change: PendingChange, userI
   if (p.isBundle) {
     await admin
       .from("items")
-      .update({ name: p.name, category_id: p.categoryId, unit_price: p.bundlePrice, quickbooks_synced_at: new Date().toISOString() })
+      .update({
+        name: p.name,
+        ...categoryIfKnown(p.categoryId),
+        unit_price: p.bundlePrice,
+        quickbooks_synced_at: new Date().toISOString(),
+      })
       .eq("id", change.item_id);
     await admin.from("bundles").update({ bundle_price: p.bundlePrice }).eq("id", change.item_id);
     await admin.from("bundle_items").delete().eq("bundle_id", change.item_id);
@@ -133,21 +147,23 @@ async function applyUpdatedItem(admin: AdminClient, change: PendingChange, userI
     return;
   }
 
-  await admin
-    .from("items")
-    .update({
-      name: p.name,
-      description: p.description,
-      category_id: p.categoryId,
-      unit_cost: p.unitCost,
-      unit_price: p.unitPrice,
-      reorder_threshold: p.reorderThreshold,
-      is_active: p.isActive,
-      quickbooks_synced_at: new Date().toISOString(),
-    })
-    .eq("id", change.item_id);
+  // Only the fields the reviewer was actually shown (the diff) are written --
+  // not a wholesale overwrite with QuickBooks values, which used to clear
+  // categories and blank out prices QuickBooks never had. A blank/zero
+  // QuickBooks price or cost never replaces a real one here either.
+  const diff = p.diff ?? {};
+  const { data: current } = await admin.from("items").select("unit_price, unit_cost").eq("id", change.item_id).single();
+  const blankOverReal = (qb: number | null, local: number | null | undefined) => Number(qb ?? 0) === 0 && Number(local ?? 0) > 0;
 
-  if (p.tracksQty && p.qtyOnHand !== null) {
+  const patch: Record<string, unknown> = { quickbooks_synced_at: new Date().toISOString() };
+  if (diff.name) patch.name = p.name;
+  if (diff.unitPrice && !blankOverReal(p.unitPrice, current?.unit_price)) patch.unit_price = p.unitPrice;
+  if (diff.unitCost && !blankOverReal(p.unitCost, current?.unit_cost)) patch.unit_cost = p.unitCost;
+  if (diff.reorderThreshold) patch.reorder_threshold = p.reorderThreshold;
+  if (diff.isActive) patch.is_active = p.isActive;
+  await admin.from("items").update(patch).eq("id", change.item_id);
+
+  if (diff.stock && p.tracksQty && p.qtyOnHand !== null) {
     const currentStock = await getCurrentStock(admin, change.item_id);
     const delta = p.qtyOnHand - currentStock;
     if (delta !== 0) {

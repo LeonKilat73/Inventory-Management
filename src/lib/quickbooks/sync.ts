@@ -277,15 +277,23 @@ async function syncCategory(admin: AdminClient, cat: QuickbooksItem, ctx: SyncCo
   result.categoriesCreated++;
 }
 
+// QuickBooks having no price or cost (0 / blank) means it has no opinion, not
+// "set this to 0". Most prices are being entered in this app first (QuickBooks
+// never had them), so treating blank-vs-real as a change would fill the review
+// queue with proposals to wipe real prices.
+function blankOverReal(qbValue: number | null, localValue: number | null): boolean {
+  return Number(qbValue ?? 0) === 0 && Number(localValue ?? 0) > 0;
+}
+
 function computeItemDiff(local: LocalItemFields, currentStock: number | null, qb: QuickbooksItem): ItemDiff {
   const diff: ItemDiff = {};
   if (local.name !== qb.Name) diff.name = { from: local.name, to: qb.Name };
 
   const qbPrice = qb.UnitPrice ?? null;
-  if (numDiffers(local.unit_price, qbPrice)) diff.unitPrice = { from: local.unit_price, to: qbPrice };
+  if (numDiffers(local.unit_price, qbPrice) && !blankOverReal(qbPrice, local.unit_price)) diff.unitPrice = { from: local.unit_price, to: qbPrice };
 
   const qbCost = qb.PurchaseCost ?? null;
-  if (numDiffers(local.unit_cost, qbCost)) diff.unitCost = { from: local.unit_cost, to: qbCost };
+  if (numDiffers(local.unit_cost, qbCost) && !blankOverReal(qbCost, local.unit_cost)) diff.unitCost = { from: local.unit_cost, to: qbCost };
 
   const qbReorder = qb.ReorderPoint ?? 0;
   if (local.reorder_threshold !== qbReorder) diff.reorderThreshold = { from: local.reorder_threshold, to: qbReorder };

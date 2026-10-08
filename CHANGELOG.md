@@ -2,6 +2,13 @@
 
 ## 2026-10-08
 
+### Fixed: items silently losing their category or price (data cleanup)
+- Found 8 active items with no category and restored all of them from the audit log. Two causes, both fixed:
+  - **Edit form:** categories that only group other categories (e.g. "GPS Navigation" with sub-categories) are hidden from the category dropdown, but 171 items sit directly inside one. Opening such an item and pressing Save quietly cleared its category. The dropdown now always includes the item's (or bundle's) current category.
+  - **QuickBooks approval:** approving an update wrote QuickBooks's whole record over the item, so a category QuickBooks didn't know became blank and a price QuickBooks left empty replaced a real price. Approval now writes only the fields shown in the review card, never replaces a real price/cost with a blank or zero, and no longer clears a bundle's category. The sync also stops proposing blank-over-real prices, and 11 already-queued proposals had those lines removed.
+- Verified with a throwaway item: an item in a grouping category keeps it on the edit page, and approving a QuickBooks update that carried a blank price, blank cost and no category only renamed the item.
+- Left for the owner (not changed): the 30 "AHU" placeholder items (look like early duplicates of QuickBooks-linked items), 47 empty categories (they hold SKU number counters / QuickBooks structure), the 4 SAMPLE items and 4 double-space names (fix these in QuickBooks so sync doesn't undo them).
+
 ### New: Bulk price update, and a "needs attention" filter on Items
 - About 405 active items have no price, and neither does QuickBooks, so the prices have to come from the shop's own list. 350 of them have stock on the shelf, and once POS is the main sales channel they would sell at ₱0. Editing them one by one isn't realistic, so Items now has **Bulk price update**: download the list of items without a price (or the full list), fill in the Unit Price (and optionally Unit Cost) column in Excel, save as CSV, and import it. The file is read and checked first and shows exactly what will change (old price to new price), which SKUs weren't found, and which rows have problems; nothing is saved until you press Apply. Prices written like "₱1,250.50" are understood, bundles are skipped (their price is edited on the Bundles page), and the whole import is one all-or-nothing step. Each change is still audited under your name, but instead of hundreds of "Item updated" alerts every admin gets one summary notification.
 - The Items list has a new **needs attention** menu: No price, Price below cost, No category, each with a count.

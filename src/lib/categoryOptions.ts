@@ -11,7 +11,12 @@ export type CategoryOption = { id: string; name: string };
 // at least one child, it's dropped from the selectable list itself so only
 // its subs (or a childless, standalone top-level category like "GPS
 // Navigation") can actually be assigned to an item.
-export function buildCategoryOptions(categories: CategoryRow[]): CategoryOption[] {
+//
+// keepCategoryId: when editing something that is ALREADY in a grouping
+// category, that category must stay selectable. Otherwise the dropdown has no
+// matching option, shows "None", and saving the form silently clears the
+// category (this wiped the category of several items before it was fixed).
+export function buildCategoryOptions(categories: CategoryRow[], keepCategoryId?: string | null): CategoryOption[] {
   const topLevel = categories.filter((c) => !c.parent_id);
   const childrenByParent = new Map<string, CategoryRow[]>();
   for (const c of categories) {
@@ -24,7 +29,7 @@ export function buildCategoryOptions(categories: CategoryRow[]): CategoryOption[
   const options: CategoryOption[] = [];
   for (const parent of topLevel) {
     const children = childrenByParent.get(parent.id) ?? [];
-    if (children.length === 0) {
+    if (children.length === 0 || parent.id === keepCategoryId) {
       options.push({ id: parent.id, name: parent.name });
     }
     for (const child of children) {
