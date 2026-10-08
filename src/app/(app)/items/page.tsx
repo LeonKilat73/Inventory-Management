@@ -69,6 +69,11 @@ export default async function ItemsPage() {
           <a href="/api/export/items" className="text-sm text-primary underline underline-offset-2">
             Export CSV
           </a>
+          {canEdit && (
+            <Link href="/items/prices" className="text-sm text-primary underline underline-offset-2">
+              Bulk price update
+            </Link>
+          )}
           {canCreate && <AddItemButton categories={buildCategoryOptions(categories ?? [])} />}
         </div>
       </div>

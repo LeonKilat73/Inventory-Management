@@ -20,6 +20,16 @@ export type ItemRow = {
   allowBackorder: boolean;
 };
 
+// Quick filters for data that needs fixing. "No price" matters most: an item
+// with no price would sell at 0 in POS.
+type Attention = "" | "noPrice" | "belowCost" | "noCategory";
+
+const ATTENTION_CHECKS: Record<Exclude<Attention, "">, (item: ItemRow) => boolean> = {
+  noPrice: (item) => !item.unitPrice,
+  belowCost: (item) => !!item.unitCost && !!item.unitPrice && item.unitPrice < item.unitCost,
+  noCategory: (item) => item.categoryName === null,
+};
+
 export function ItemsTable({
   items,
   categoryNames,
@@ -34,6 +44,7 @@ export function ItemsTable({
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
   const [showInactive, setShowInactive] = useState(false);
+  const [attention, setAttention] = useState<Attention>("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
@@ -47,14 +58,26 @@ export function ItemsTable({
         (item.categoryName?.toLowerCase().includes(q) ?? false);
       const matchesCategory = !category || item.categoryName === category;
       const matchesActive = showInactive || item.isActive;
-      return matchesQuery && matchesCategory && matchesActive;
+      const matchesAttention = !attention || ATTENTION_CHECKS[attention](item);
+      return matchesQuery && matchesCategory && matchesActive && matchesAttention;
     });
-  }, [items, query, category, showInactive]);
+  }, [items, query, category, showInactive, attention]);
+
+  // Counts for the "needs attention" menu, over active items only so the
+  // numbers match what a person fixing them would actually see.
+  const attentionCounts = useMemo(() => {
+    const active = items.filter((i) => i.isActive);
+    return {
+      noPrice: active.filter(ATTENTION_CHECKS.noPrice).length,
+      belowCost: active.filter(ATTENTION_CHECKS.belowCost).length,
+      noCategory: active.filter(ATTENTION_CHECKS.noCategory).length,
+    };
+  }, [items]);
 
   // A new search/filter should always start back at page 1 -- adjusted
   // during render (React's recommended pattern for this, not an effect)
   // rather than a useEffect, which would cause an extra cascading render.
-  const filterKey = `${query}|${category}|${showInactive}`;
+  const filterKey = `${query}|${category}|${showInactive}|${attention}`;
   const [lastFilterKey, setLastFilterKey] = useState(filterKey);
   if (filterKey !== lastFilterKey) {
     setLastFilterKey(filterKey);
@@ -98,6 +121,17 @@ export function ItemsTable({
               {name}
             </option>
           ))}
+        </select>
+        <select
+          value={attention}
+          onChange={(e) => setAttention(e.target.value as Attention)}
+          aria-label="Needs attention"
+          className="rounded-md border border-outline bg-surface px-4 py-2.5 text-sm text-on-surface outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+        >
+          <option value="">All items</option>
+          <option value="noPrice">No price ({attentionCounts.noPrice})</option>
+          <option value="belowCost">Price below cost ({attentionCounts.belowCost})</option>
+          <option value="noCategory">No category ({attentionCounts.noCategory})</option>
         </select>
         <label className="flex items-center gap-2 text-sm text-on-surface-variant">
           <input

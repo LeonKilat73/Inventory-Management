@@ -2,6 +2,11 @@
 
 ## 2026-10-08
 
+### New: Bulk price update, and a "needs attention" filter on Items
+- About 405 active items have no price, and neither does QuickBooks, so the prices have to come from the shop's own list. 350 of them have stock on the shelf, and once POS is the main sales channel they would sell at ₱0. Editing them one by one isn't realistic, so Items now has **Bulk price update**: download the list of items without a price (or the full list), fill in the Unit Price (and optionally Unit Cost) column in Excel, save as CSV, and import it. The file is read and checked first and shows exactly what will change (old price to new price), which SKUs weren't found, and which rows have problems; nothing is saved until you press Apply. Prices written like "₱1,250.50" are understood, bundles are skipped (their price is edited on the Bundles page), and the whole import is one all-or-nothing step. Each change is still audited under your name, but instead of hundreds of "Item updated" alerts every admin gets one summary notification.
+- The Items list has a new **needs attention** menu: No price, Price below cost, No category, each with a count.
+- POS shows a red "No price set" warning on any cart line priced at zero.
+
 ### Security and stability pass (whole app)
 - **Critical, already fixed in the database:** several server-only database functions (recording, voiding and returning POS sales, and the three login-lockout functions) could be called by anyone on the internet without logging in, using only the public key that ships in the website's code, and the public stock view listed every item's id. Together that allowed fabricating or voiding sales, moving stock, and locking out or unlocking accounts. They are now restricted to the server; the POS sales API, logins, and signed-in use were re-tested and still work.
 - **Stock ledger hardened:** a direct write to the stock ledger needed only the permission, so any staff member could insert any movement type, any sign (e.g. +999 labelled "po_receipt"), and no author. The database now only accepts the four manual movement types from users, requires the sign to match the type, and always records the signed-in user as the author. Receiving, defect handling, POS sales, voids and returns were regression-tested (22 checks).

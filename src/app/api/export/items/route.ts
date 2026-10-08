@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import { getCurrentUser, hasPermission } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { toCsv, csvResponse } from "@/lib/csv";
@@ -16,7 +17,10 @@ type Row = {
   categories: { name: string } | { name: string }[] | null;
 };
 
-export async function GET() {
+// ?missing=price limits the sheet to active, non-bundle items with no price --
+// the list to fill in and bring back through Items > Bulk price update.
+export async function GET(request: NextRequest) {
+  const onlyMissingPrice = request.nextUrl.searchParams.get("missing") === "price";
   const user = await getCurrentUser();
   if (!user) return new Response("Unauthorized", { status: 401 });
   if (!(await hasPermission("items", "view"))) return new Response("Forbidden", { status: 403 });
@@ -36,7 +40,9 @@ export async function GET() {
 
   const stockByItemId = new Map((stockLevels ?? []).map((s) => [s.item_id, s.current_stock]));
 
-  const rows = (items ?? []).map((item) => {
+  const rows = (items ?? [])
+    .filter((item) => !onlyMissingPrice || (item.is_active && !item.is_bundle && !Number(item.unit_price)))
+    .map((item) => {
     const category = Array.isArray(item.categories) ? item.categories[0] : item.categories;
     return {
       sku: item.sku,
@@ -67,5 +73,6 @@ export async function GET() {
     { key: "status", header: "Status" },
   ]);
 
-  return csvResponse(csv, `items-${new Date().toISOString().slice(0, 10)}.csv`);
+  const prefix = onlyMissingPrice ? "items-without-price" : "items";
+  return csvResponse(csv, `${prefix}-${new Date().toISOString().slice(0, 10)}.csv`);
 }
