@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
-import { createSupplier, deleteSupplier } from "@/actions/suppliers";
+import { createSupplier } from "@/actions/suppliers";
 import { SupplierForm } from "./_components/SupplierForm";
+import { SupplierRowActions } from "./_components/SupplierRowActions";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 
@@ -57,26 +57,12 @@ export default async function SuppliersPage() {
                 </td>
                 {(canEdit || canDelete) && (
                   <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-4">
-                      {canEdit && (
-                        <Link
-                          href={`/suppliers/${s.id}`}
-                          className="text-primary underline underline-offset-2"
-                        >
-                          Edit
-                        </Link>
-                      )}
-                      {canDelete && (
-                        <form action={deleteSupplier.bind(null, s.id)}>
-                          <button
-                            type="submit"
-                            className="text-error underline underline-offset-2"
-                          >
-                            Delete
-                          </button>
-                        </form>
-                      )}
-                    </div>
+                    <SupplierRowActions
+                      supplierId={s.id}
+                      isActive={s.is_active}
+                      canEdit={canEdit}
+                      canDelete={canDelete}
+                    />
                   </td>
                 )}
               </tr>
@@ -105,19 +91,13 @@ export default async function SuppliersPage() {
               {s.phone && <p>{s.phone}</p>}
             </div>
             {(canEdit || canDelete) && (
-              <div className="mt-3 flex gap-4 text-sm">
-                {canEdit && (
-                  <Link href={`/suppliers/${s.id}`} className="text-primary underline underline-offset-2">
-                    Edit
-                  </Link>
-                )}
-                {canDelete && (
-                  <form action={deleteSupplier.bind(null, s.id)}>
-                    <button type="submit" className="text-error underline underline-offset-2">
-                      Delete
-                    </button>
-                  </form>
-                )}
+              <div className="mt-3 text-sm">
+                <SupplierRowActions
+                  supplierId={s.id}
+                  isActive={s.is_active}
+                  canEdit={canEdit}
+                  canDelete={canDelete}
+                />
               </div>
             )}
           </div>
