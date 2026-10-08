@@ -3,7 +3,7 @@
 ## 2026-10-08
 
 ### Changed: Slow movers report is readable now
-- The Reports page's "Slow movers" section used to print every active item with no sales as an identical pill, which on the real catalog meant a wall of ~670 names. It now only lists items that actually have units on the shelf (an item with zero stock and zero sales isn't slow, it just isn't stocked), headed by a summary of how many items, units and how much stock cost is sitting unsold. The top 15 by stock cost are shown in a table (category, on hand, stock cost, last sold date), and the rest sit in collapsible per-category groups. A short note explains that only sales recorded in this system count, since sales rung up directly in QuickBooks aren't included. The CSV export is unchanged.
+- The Reports page's "Slow movers" section used to print every active item with no sales as an identical pill, which on the real catalog meant a wall of ~670 names. It now only lists items that actually have units on the shelf (an item with zero stock and zero sales isn't slow, it just isn't stocked), headed by a summary of how many items, units and how much stock cost is sitting unsold. They are shown in a table (category, on hand, stock cost, last sold date) sorted by stock cost, 15 per page with Previous / Next and a page dropdown, the same way the Items list pages. A short note explains that only sales recorded in this system count, since sales rung up directly in QuickBooks aren't included. The CSV export is unchanged.
 
 ## 2026-08-20
 

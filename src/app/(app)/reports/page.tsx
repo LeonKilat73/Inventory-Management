@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { SlowMoversTable, type SlowMoverRow } from "./_components/SlowMoversTable";
 
 const PERIODS = {
   week: { label: "This week", days: 7 },
@@ -27,9 +28,7 @@ type ItemRow = {
 
 // Slow movers only list items with units actually on the shelf -- an item
 // with zero stock and zero sales isn't "slow", it just isn't stocked
-// (made-to-order, never received). The top of the list is capped; everything
-// else sits in collapsible per-category groups so the page stays scannable.
-const SLOW_TOP_N = 15;
+// (made-to-order, never received). Paged client-side in SlowMoversTable.
 
 const peso = (n: number) =>
   `₱${n.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -138,27 +137,23 @@ export default async function ReportsPage({
         name: item.name,
         stock,
         stockCost: stock * Number(item.unit_cost ?? 0),
-        lastSold: lastSoldById.get(item.id) ?? null,
+        lastSoldLabel: lastSoldById.has(item.id) ? shortDate(lastSoldById.get(item.id)!) : "Never",
         categoryLabel: category ? (parent ? `${parent.name}: ${category.name}` : category.name) : "Uncategorized",
-        groupName: parent?.name ?? category?.name ?? "Uncategorized",
       };
     })
     .sort((a, b) => b.stockCost - a.stockCost || b.stock - a.stock || a.name.localeCompare(b.name));
 
   const slowUnits = slowMovers.reduce((sum, r) => sum + r.stock, 0);
   const slowCost = slowMovers.reduce((sum, r) => sum + r.stockCost, 0);
-  const slowTop = slowMovers.slice(0, SLOW_TOP_N);
-
-  const slowGroups = new Map<string, { items: typeof slowMovers; cost: number }>();
-  for (const row of slowMovers) {
-    const group = slowGroups.get(row.groupName) ?? { items: [], cost: 0 };
-    group.items.push(row);
-    group.cost += row.stockCost;
-    slowGroups.set(row.groupName, group);
-  }
-  const slowGroupList = [...slowGroups.entries()].sort(
-    (a, b) => b[1].cost - a[1].cost || b[1].items.length - a[1].items.length,
-  );
+  const slowRows: SlowMoverRow[] = slowMovers.map((r) => ({
+    id: r.id,
+    sku: r.sku,
+    name: r.name,
+    categoryLabel: r.categoryLabel,
+    stock: r.stock,
+    stockCostLabel: peso(r.stockCost),
+    lastSoldLabel: r.lastSoldLabel,
+  }));
 
   return (
     <div className="space-y-6">
@@ -269,76 +264,7 @@ export default async function ReportsPage({
               <span className="text-on-surface-variant"> of stock at cost</span>
             </p>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-left text-xs text-on-surface-variant">
-                  <tr>
-                    <th className="pb-2 pr-4 font-medium">Item</th>
-                    <th className="pb-2 pr-4 font-medium">Category</th>
-                    <th className="pb-2 pr-4 text-right font-medium">On hand</th>
-                    <th className="pb-2 pr-4 text-right font-medium">Stock cost</th>
-                    <th className="pb-2 font-medium">Last sold</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {slowTop.map((row) => (
-                    <tr key={row.id} className="border-t border-outline-variant/60">
-                      <td className="py-2 pr-4">
-                        <p className="text-on-surface">{row.name}</p>
-                        <p className="font-mono text-xs text-on-surface-variant">{row.sku}</p>
-                      </td>
-                      <td className="py-2 pr-4 text-on-surface-variant">{row.categoryLabel}</td>
-                      <td className="py-2 pr-4 text-right tabular-nums text-on-surface">{row.stock}</td>
-                      <td className="py-2 pr-4 text-right tabular-nums text-on-surface">{peso(row.stockCost)}</td>
-                      <td className="whitespace-nowrap py-2 text-on-surface-variant">
-                        {row.lastSold ? shortDate(row.lastSold) : "Never"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {slowMovers.length > SLOW_TOP_N && (
-              <details className="group rounded-xl border border-outline-variant/60">
-                <summary className="cursor-pointer select-none px-4 py-3 text-sm font-medium text-primary">
-                  See all {slowMovers.length.toLocaleString("en-PH")} items by category
-                </summary>
-                <div className="space-y-2 border-t border-outline-variant/60 p-3">
-                  {slowGroupList.map(([groupName, group]) => (
-                    <details key={groupName} className="rounded-lg bg-surface-container-low">
-                      <summary className="flex cursor-pointer select-none items-center justify-between gap-3 px-3 py-2 text-sm text-on-surface">
-                        <span>
-                          {groupName}{" "}
-                          <span className="text-on-surface-variant">({group.items.length})</span>
-                        </span>
-                        <span className="shrink-0 tabular-nums text-on-surface-variant">{peso(group.cost)}</span>
-                      </summary>
-                      <div className="overflow-x-auto px-3 pb-3">
-                        <table className="w-full text-sm">
-                          <tbody>
-                            {group.items.map((row) => (
-                              <tr key={row.id} className="border-t border-outline-variant/60">
-                                <td className="py-1.5 pr-4 text-on-surface">
-                                  {row.name}{" "}
-                                  <span className="font-mono text-xs text-on-surface-variant">{row.sku}</span>
-                                </td>
-                                <td className="whitespace-nowrap py-1.5 pr-4 text-right tabular-nums text-on-surface">
-                                  {row.stock} on hand
-                                </td>
-                                <td className="whitespace-nowrap py-1.5 text-right tabular-nums text-on-surface-variant">
-                                  {peso(row.stockCost)}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </details>
-                  ))}
-                </div>
-              </details>
-            )}
+            <SlowMoversTable rows={slowRows} />
           </div>
         )}
       </Card>
