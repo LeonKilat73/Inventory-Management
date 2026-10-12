@@ -4,6 +4,7 @@ import { revokeApiKey } from "@/actions/apiKeys";
 import { CreateApiKeyForm } from "./_components/CreateApiKeyForm";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { formatDate } from "@/lib/formatDate";
 
 export default async function ApiKeysPage() {
   const permissions = await getPermissions();
@@ -65,7 +66,7 @@ export default async function ApiKeysPage() {
                   </Badge>
                 </td>
                 <td className="px-4 py-3 text-on-surface-variant">
-                  {new Date(k.created_at).toLocaleDateString()}
+                  {formatDate(k.created_at)}
                 </td>
                 {canRevoke && (
                   <td className="px-4 py-3 text-right">

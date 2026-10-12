@@ -5,6 +5,7 @@ import { markNotificationRead, markAllNotificationsRead } from "@/actions/notifi
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { formatDateTime } from "@/lib/formatDate";
 
 const TYPE_TONE = {
   low_stock: "error",
@@ -68,7 +69,7 @@ export default async function NotificationsPage() {
                 <p className="mt-1.5 font-medium text-on-surface">{n.title}</p>
                 {n.body && <p className="mt-0.5 text-sm text-on-surface-variant">{n.body}</p>}
                 <p className="mt-1.5 text-xs text-on-surface-variant">
-                  {new Date(n.created_at).toLocaleString()}
+                  {formatDateTime(n.created_at)}
                 </p>
               </div>
               {!n.is_read && (

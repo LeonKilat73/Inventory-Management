@@ -165,7 +165,8 @@ async function applyUpdatedItem(admin: AdminClient, change: PendingChange, userI
 
   if (diff.stock && p.tracksQty && p.qtyOnHand !== null) {
     const currentStock = await getCurrentStock(admin, change.item_id);
-    const delta = p.qtyOnHand - currentStock;
+    // Older queued rows can still carry a negative QuickBooks count.
+    const delta = Math.max(0, p.qtyOnHand) - currentStock;
     if (delta !== 0) {
       await recordStockMovement(admin, {
         itemId: change.item_id,

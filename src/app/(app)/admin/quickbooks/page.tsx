@@ -4,6 +4,7 @@ import { getPendingChanges } from "@/actions/quickbooksSync";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { PendingChangesList, SyncNowButton } from "./_components/SyncControls";
+import { formatDateTime } from "@/lib/formatDate";
 
 // Matches the cron route's maxDuration -- the "Run sync now" button on this
 // page invokes runSyncNow(), which can take a while on a full catalog sync.
@@ -74,7 +75,7 @@ export default async function QuickbooksPage({
               Company ID: <span className="font-mono">{connection.realmId}</span>
             </p>
             <p className="text-sm text-on-surface-variant">
-              Connected since {new Date(connection.connectedAt).toLocaleString()}
+              Connected since {formatDateTime(connection.connectedAt)}
             </p>
             {canDisconnect && (
               <form action={disconnectQuickbooks}>
@@ -113,7 +114,7 @@ export default async function QuickbooksPage({
                 <h2 className="text-lg font-medium text-on-surface">Catalog sync</h2>
                 <p className="text-sm text-on-surface-variant">
                   {connection.lastItemSyncAt
-                    ? `Last synced ${new Date(connection.lastItemSyncAt).toLocaleString()}`
+                    ? `Last synced ${formatDateTime(connection.lastItemSyncAt)}`
                     : "Never synced yet -- runs automatically once a day, or trigger it now."}
                 </p>
               </div>

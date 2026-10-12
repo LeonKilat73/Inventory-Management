@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getPermissions } from "@/lib/auth/permissions";
 import { AuditDiff } from "./_components/AuditDiff";
 import { Badge } from "@/components/ui/Badge";
+import { formatDateTime } from "@/lib/formatDate";
 
 const ACTION_TONE = {
   insert: "primary",
@@ -117,7 +118,7 @@ export default async function AuditLogPage({
                   {r.changed_by ? (nameById.get(r.changed_by) ?? "Unknown user") : "System"}
                 </td>
                 <td className="px-4 py-3 text-on-surface-variant">
-                  {new Date(r.created_at).toLocaleString()}
+                  {formatDateTime(r.created_at)}
                 </td>
                 <td className="px-4 py-3">
                   <AuditDiff action={r.action} oldData={r.old_data} newData={r.new_data} />

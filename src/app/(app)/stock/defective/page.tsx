@@ -4,6 +4,7 @@ import { ReportDefectiveForm } from "./_components/ReportDefectiveForm";
 import { ResolveForm } from "./_components/ResolveForm";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { formatDate } from "@/lib/formatDate";
 
 const STATUS_TONE = {
   pending: "error",
@@ -87,7 +88,7 @@ export default async function DefectiveItemsPage() {
                     <Badge tone={STATUS_TONE[r.status]}>{r.status.replace(/_/g, " ")}</Badge>
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant">
-                    {new Date(r.created_at).toLocaleDateString()}
+                    {formatDate(r.created_at)}
                   </td>
                   {canEdit && (
                     <td className="px-4 py-3">

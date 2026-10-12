@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { unsuspendUser, type ActionState } from "@/actions/users";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { formatTime } from "@/lib/formatDate";
 
 const initialState: ActionState = { error: null };
 
@@ -37,7 +38,7 @@ export function SecurityStatusCard({
 
       {isLocked && lockedUntil && (
         <p className="text-sm text-on-surface-variant">
-          Locked until {new Date(lockedUntil).toLocaleTimeString()} — clears automatically.
+          Locked until {formatTime(lockedUntil)} — clears automatically.
         </p>
       )}
 

@@ -2,6 +2,10 @@
 
 ## 2026-10-08
 
+### Fixed: QuickBooks stock changes that wouldn't approve, and times shown 8 hours behind
+- **Negative QuickBooks stock:** QuickBooks lets stock go negative (e.g. -237 for a sticker sold before its receipt was entered), but this system's ledger never goes below zero, so approving those changes failed with "Only 1 in stock -- can't remove 3" and the same change came back on every sync. A negative QuickBooks count is now read as 0 both when the sync detects changes and when a change is approved. 18 queued changes were rewritten the same way: 7 that only differed by a negative count were closed, 11 kept their real price and reorder-level updates.
+- **Wrong times:** pages formatted dates in the server's timezone (UTC on Vercel), so a sync at 3:42 PM Philippine time read "7:42 AM". New shared helper `src/lib/formatDate.ts` pins Asia/Manila; used on the QuickBooks page, audit log, notifications, stock movements, defective items, API keys, the lockout notice and the stock-movements CSV export. Any new date shown on a page should use it rather than a bare `toLocaleString()`.
+
 ### Fixed: items silently losing their category or price (data cleanup)
 - Found 8 active items with no category and restored all of them from the audit log. Two causes, both fixed:
   - **Edit form:** categories that only group other categories (e.g. "GPS Navigation" with sub-categories) are hidden from the category dropdown, but 171 items sit directly inside one. Opening such an item and pressing Save quietly cleared its category. The dropdown now always includes the item's (or bundle's) current category.

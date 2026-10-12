@@ -281,6 +281,14 @@ async function syncCategory(admin: AdminClient, cat: QuickbooksItem, ctx: SyncCo
 // "set this to 0". Most prices are being entered in this app first (QuickBooks
 // never had them), so treating blank-vs-real as a change would fill the review
 // queue with proposals to wipe real prices.
+// QuickBooks lets stock go negative (sold before the receipt was entered);
+// this system's ledger never does, so a negative count is read as "none on
+// hand". Without this the stock change could never be approved ("Only 1 in
+// stock -- can't remove 3") and kept coming back on every sync.
+function nonNegativeQty(qty: number | undefined | null): number {
+  return Math.max(0, qty ?? 0);
+}
+
 function blankOverReal(qbValue: number | null, localValue: number | null): boolean {
   return Number(qbValue ?? 0) === 0 && Number(localValue ?? 0) > 0;
 }
@@ -301,7 +309,7 @@ function computeItemDiff(local: LocalItemFields, currentStock: number | null, qb
   if (local.is_active !== qb.Active) diff.isActive = { from: local.is_active, to: qb.Active };
 
   if (qb.TrackQtyOnHand && currentStock !== null) {
-    const qbQty = qb.QtyOnHand ?? 0;
+    const qbQty = nonNegativeQty(qb.QtyOnHand);
     if (currentStock !== qbQty) diff.stock = { from: currentStock, to: qbQty };
   }
 
@@ -323,7 +331,7 @@ function buildItemPayload(qi: QuickbooksItem, categoryId: string | null, diff: I
     reorderThreshold: qi.ReorderPoint ?? 0,
     isActive: qi.Active,
     tracksQty: !!qi.TrackQtyOnHand,
-    qtyOnHand: qi.TrackQtyOnHand ? qi.QtyOnHand ?? 0 : null,
+    qtyOnHand: qi.TrackQtyOnHand ? nonNegativeQty(qi.QtyOnHand) : null,
     diff,
   };
 }

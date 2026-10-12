@@ -3,6 +3,7 @@ import { getPermissions } from "@/lib/auth/permissions";
 import { MovementForm } from "./_components/MovementForm";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { formatDateTime } from "@/lib/formatDate";
 
 type MovementRow = {
   id: string;
@@ -90,7 +91,7 @@ export default async function StockMovementsPage() {
                   </td>
                   <td className="px-4 py-3 text-on-surface-variant">{m.note ?? "—"}</td>
                   <td className="px-4 py-3 text-on-surface-variant">
-                    {new Date(m.created_at).toLocaleString()}
+                    {formatDateTime(m.created_at)}
                   </td>
                 </tr>
               );

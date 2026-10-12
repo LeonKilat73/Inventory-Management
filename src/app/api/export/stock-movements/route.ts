@@ -1,6 +1,7 @@
 import { getCurrentUser, hasPermission } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { toCsv, csvResponse } from "@/lib/csv";
+import { formatDateTime } from "@/lib/formatDate";
 
 type Row = {
   created_at: string;
@@ -31,7 +32,7 @@ export async function GET() {
     const item = Array.isArray(m.items) ? m.items[0] : m.items;
     const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
     return {
-      date: new Date(m.created_at).toLocaleString(),
+      date: formatDateTime(m.created_at),
       item: item?.name ?? "",
       sku: item?.sku ?? "",
       type: m.movement_type.replace(/_/g, " "),
