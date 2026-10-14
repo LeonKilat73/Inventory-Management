@@ -16,6 +16,10 @@ const STATUS_MESSAGES: Record<string, { tone: "error" | "primary"; text: string 
   token_exchange_failed: { tone: "error", text: "QuickBooks didn't accept the connection request. Try again." },
   verification_failed: { tone: "error", text: "Connected, but the test call to confirm it actually worked failed. Try again." },
   save_failed: { tone: "error", text: "QuickBooks authorized the connection, but saving it here failed. Try again." },
+  not_configured: {
+    tone: "error",
+    text: "QuickBooks isn't set up on this server yet: QBO_CLIENT_ID, QBO_CLIENT_SECRET and QBO_REDIRECT_URI are missing. Add them to the server settings and restart.",
+  },
   connected: { tone: "primary", text: "Connected to QuickBooks." },
 };
 

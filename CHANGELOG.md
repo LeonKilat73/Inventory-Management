@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-14
+
+### Changed: QuickBooks setup on a new server
+- Connecting QuickBooks without `QBO_CLIENT_ID` / `QBO_CLIENT_SECRET` / `QBO_REDIRECT_URI` set used to end in a bare HTTP 500. The Connect route now sends the admin back to the QuickBooks page with "QuickBooks isn't set up on this server yet" and logs the reason.
+- `.env.example` now lists every variable the app needs, including the three QuickBooks ones and `CRON_SECRET` (the daily sync is `GET /api/cron/quickbooks-sync` with `Authorization: Bearer <CRON_SECRET>`).
+- Moving hosts checklist: register the new callback URL (and launch/disconnect/reconnect URLs) under the Intuit app's Production keys, set the `QBO_*` variables, redeploy, and have only one running copy refresh the QuickBooks token.
+
 ## 2026-10-08
 
 ### Fixed: QuickBooks stock changes that wouldn't approve, and times shown 8 hours behind
