@@ -1,7 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
-import { runSyncNow, applyPendingChange, dismissPendingChange, type PendingChange } from "@/actions/quickbooksSync";
+import { useActionState, useState, useTransition } from "react";
+import {
+  runSyncNow,
+  applyPendingChange,
+  applyAllPendingChanges,
+  dismissPendingChange,
+  type ApplyAllResult,
+  type PendingChange,
+} from "@/actions/quickbooksSync";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
@@ -91,11 +98,97 @@ function PendingChangeRow({ change }: { change: PendingChange }) {
   );
 }
 
-export function PendingChangesList({ changes }: { changes: PendingChange[] }) {
-  if (changes.length === 0) {
-    return <p className="text-sm text-on-surface-variant">No changes waiting for review.</p>;
+function ApproveAll({ changes, onDone }: { changes: PendingChange[]; onDone: (result: ApplyAllResult) => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  const newItems = changes.filter((c) => c.change_type === "new_item").length;
+  const newBundles = changes.filter((c) => c.change_type === "new_bundle").length;
+  const updates = changes.length - newItems - newBundles;
+  const unpriced = changes.filter(
+    (c) => c.change_type === "new_item" && !(typeof c.payload.unitPrice === "number" && c.payload.unitPrice > 0),
+  ).length;
+
+  function run() {
+    startTransition(async () => {
+      const result = await applyAllPendingChanges();
+      setConfirming(false);
+      onDone(result);
+    });
   }
-  return <ul>{changes.map((change) => <PendingChangeRow key={change.id} change={change} />)}</ul>;
+
+  if (!confirming) {
+    return (
+      <Button type="button" variant="tonal" onClick={() => setConfirming(true)}>
+        Approve all ({changes.length})
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-outline-variant bg-surface-container p-4">
+      <p className="text-sm text-on-surface">
+        Approve all {changes.length} waiting changes? That adds {newItems} new item{newItems === 1 ? "" : "s"} and{" "}
+        {newBundles} new bundle{newBundles === 1 ? "" : "s"}, and applies {updates} update{updates === 1 ? "" : "s"}.
+        You can still approve or dismiss them one by one instead.
+      </p>
+      {unpriced > 0 && (
+        <p className="text-sm text-on-surface-variant">
+          {unpriced === 1
+            ? "1 new item has no price in QuickBooks; it will be added at ₱0 until you set one."
+            : `${unpriced} new items have no price in QuickBooks; they will be added at ₱0 until you set one.`}
+        </p>
+      )}
+      <div className="flex gap-2">
+        <Button type="button" variant="outlined" disabled={pending} onClick={() => setConfirming(false)}>
+          Cancel
+        </Button>
+        <Button type="button" variant="filled" disabled={pending} onClick={run}>
+          {pending ? "Approving…" : "Yes, approve all"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ApproveAllNotice({ result, onClose }: { result: ApplyAllResult; onClose: () => void }) {
+  return (
+    <div className="space-y-2 rounded-lg border border-outline-variant bg-surface-container p-4 text-sm">
+      <p className="text-on-surface">
+        Approved {result.applied} change{result.applied === 1 ? "" : "s"}.
+        {result.failed.length > 0 && ` ${result.failed.length} could not be applied and are still waiting below.`}
+        {result.remaining > 0 && ` ${result.remaining} more are still waiting -- press Approve all again to continue.`}
+      </p>
+      {result.failed.length > 0 && (
+        <ul className="list-disc space-y-1 pl-5 text-error">
+          {result.failed.map((f, i) => (
+            <li key={i}>
+              {f.name}: {f.error}
+            </li>
+          ))}
+        </ul>
+      )}
+      <button type="button" onClick={onClose} className="text-on-surface-variant underline underline-offset-2">
+        Dismiss this message
+      </button>
+    </div>
+  );
+}
+
+export function PendingChangesList({ changes }: { changes: PendingChange[] }) {
+  const [result, setResult] = useState<ApplyAllResult | null>(null);
+
+  return (
+    <div className="space-y-3">
+      {changes.length > 0 && <ApproveAll changes={changes} onDone={setResult} />}
+      {result && <ApproveAllNotice result={result} onClose={() => setResult(null)} />}
+      {changes.length === 0 ? (
+        <p className="text-sm text-on-surface-variant">No changes waiting for review.</p>
+      ) : (
+        <ul>{changes.map((change) => <PendingChangeRow key={change.id} change={change} />)}</ul>
+      )}
+    </div>
+  );
 }
 
 export function SyncNowButton() {

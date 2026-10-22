@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-22
+
+### New: "Approve all" on the QuickBooks review list
+- The Pending review list on the QuickBooks page has an **Approve all (N)** button above it. It asks for confirmation first ("adds X new items and Y bundles, applies Z updates", plus a warning for new items that have no price), then applies every waiting change using the same code as the single **Approve** button. The per-row Approve and Dismiss buttons are unchanged.
+- A change that can't be applied doesn't stop the rest: it stays in the list, and a summary under the button names it with the reason. The run stops after about 45 seconds; if a long queue is cut off the summary says how many remain and pressing the button again continues.
+- Tested with throwaway changes (two new items and one deliberately failing): 2 applied, the failure reported by name and left waiting.
+
 ## 2026-10-14
 
 ### Changed: QuickBooks setup on a new server

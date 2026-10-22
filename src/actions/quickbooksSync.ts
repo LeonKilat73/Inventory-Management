@@ -214,6 +214,28 @@ async function applyNewBundle(admin: AdminClient, change: PendingChange) {
   }
 }
 
+// Shared by the single Approve button and Approve all so both go through exactly
+// the same write path. Returns an error message, or null once applied and resolved.
+async function applyChange(admin: AdminClient, change: PendingChange, userId: string): Promise<string | null> {
+  try {
+    if (change.change_type === "new_item") {
+      await applyNewItem(admin, change, userId);
+    } else if (change.change_type === "new_bundle") {
+      await applyNewBundle(admin, change);
+    } else {
+      await applyUpdatedItem(admin, change, userId);
+    }
+  } catch (err) {
+    return err instanceof Error ? err.message : "Failed to apply this change.";
+  }
+
+  await admin
+    .from("quickbooks_pending_changes")
+    .update({ resolved_at: new Date().toISOString(), resolved_by: userId, resolution: "applied" })
+    .eq("id", change.id);
+  return null;
+}
+
 export async function applyPendingChange(id: string): Promise<{ error: string | null }> {
   const user = await requirePermission("quickbooks", "edit");
   const admin = createAdminClient();
@@ -226,23 +248,50 @@ export async function applyPendingChange(id: string): Promise<{ error: string | 
     .maybeSingle();
   if (!change) return { error: "This change was already resolved." };
 
-  try {
-    if (change.change_type === "new_item") {
-      await applyNewItem(admin, change as PendingChange, user.id);
-    } else if (change.change_type === "new_bundle") {
-      await applyNewBundle(admin, change as PendingChange);
-    } else {
-      await applyUpdatedItem(admin, change as PendingChange, user.id);
-    }
-  } catch (err) {
-    return { error: err instanceof Error ? err.message : "Failed to apply this change." };
-  }
-
-  await admin
-    .from("quickbooks_pending_changes")
-    .update({ resolved_at: new Date().toISOString(), resolved_by: user.id, resolution: "applied" })
-    .eq("id", id);
+  const error = await applyChange(admin, change as PendingChange, user.id);
+  if (error) return { error };
 
   revalidatePath("/admin/quickbooks");
   return { error: null };
+}
+
+export type ApplyAllResult = {
+  error: string | null;
+  applied: number;
+  failed: { name: string; error: string }[];
+  remaining: number;
+};
+
+// The page allows 60s (maxDuration); stop a little short of it so a long queue
+// is finished by pressing the button again rather than being cut off mid-write.
+const APPLY_ALL_BUDGET_MS = 45_000;
+
+export async function applyAllPendingChanges(): Promise<ApplyAllResult> {
+  const user = await requirePermission("quickbooks", "edit");
+  const admin = createAdminClient();
+
+  const { data } = await admin
+    .from("quickbooks_pending_changes")
+    .select("id, quickbooks_item_id, change_type, item_id, payload, detected_at")
+    .is("resolved_at", null)
+    .order("detected_at", { ascending: true });
+  const changes = (data ?? []) as PendingChange[];
+
+  const started = Date.now();
+  const failed: ApplyAllResult["failed"] = [];
+  let applied = 0;
+  let remaining = 0;
+
+  for (const [index, change] of changes.entries()) {
+    if (Date.now() - started > APPLY_ALL_BUDGET_MS) {
+      remaining = changes.length - index;
+      break;
+    }
+    const error = await applyChange(admin, change, user.id);
+    if (error) failed.push({ name: String(change.payload.name ?? change.quickbooks_item_id), error });
+    else applied++;
+  }
+
+  revalidatePath("/admin/quickbooks");
+  return { error: null, applied, failed, remaining };
 }
